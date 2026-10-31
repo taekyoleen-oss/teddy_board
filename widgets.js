@@ -156,8 +156,8 @@ const wxFrom = d => Math.max(0, d.hourly.time.indexOf(d.current.time.slice(0, 13
 // 현재 위치는 기기마다 달라서 서버에 저장하지 않고 이 기기에서 30분간 기억한다
 let wxHere = null;
 const wxFix = fresh => new Promise((ok, no) => {
-  if (!navigator.geolocation) return no(new Error('https 또는 이 컴퓨터 주소에서만 위치를 쓸 수 있습니다'));
-  navigator.geolocation.getCurrentPosition(ok, no, {timeout: 10000, maximumAge: fresh ? 0 : 1800000});
+  if (!window.isSecureContext) return api('/api/here').then(p => ok({coords: {latitude: p.lat, longitude: p.lon}}), no);  // 이 컴퓨터면 서버가 Windows 위치를 준다
+  navigator.geolocation.getCurrentPosition(ok, no, {timeout: 20000, maximumAge: fresh ? 0 : 1800000});
 });
 async function wxPlace(fresh) {
   const c = {...WX_HOME, ...wdata.weather};
@@ -169,7 +169,10 @@ async function wxPlace(fresh) {
       wxHere = {name, lat, lon, at: Date.now()};
     }
     return {...c, ...wxHere};
-  } catch { return {...c, name: c.name + ' (위치 확인 실패)'}; }
+  } catch (err) {  // 실패 이유를 그대로 보여 준다
+    const why = !window.isSecureContext ? 'https 아님' : {1: '위치 권한 없음', 2: '위치 신호 없음', 3: '위치 시간 초과'}[err.code] || '위치 확인 실패';
+    return {...c, name: `${c.name} (${why})`};
+  }
 }
 W.weather = {
   name: '날씨', icon: '🌤️', slim: true, about: '현재·시간별·일자별 날씨. 속성에서 보기와 위치를 고릅니다',

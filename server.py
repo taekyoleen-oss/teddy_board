@@ -238,6 +238,28 @@ def place_search(text):
     return cached(f"place {text}", 86400, make)
 
 
+# 주소가 https 가 아니면 브라우저가 위치를 주지 않는다. 이 컴퓨터에서 연 화면은 Windows 위치를 대신 읽어 준다
+HERE_SCRIPT = """Add-Type -AssemblyName System.Device
+$w = New-Object System.Device.Location.GeoCoordinateWatcher
+$w.Start()
+$until = (Get-Date).AddSeconds(15)
+while ($w.Position.Location.IsUnknown -and (Get-Date) -lt $until) { Start-Sleep -Milliseconds 300 }
+$l = $w.Position.Location
+if (-not $l.IsUnknown) { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0} {1}', $l.Latitude, $l.Longitude) }
+$w.Stop()"""
+
+
+def windows_place():
+    def make():
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", HERE_SCRIPT], capture_output=True, text=True, timeout=30,
+                             creationflags=subprocess.CREATE_NO_WINDOW).stdout.split()
+        return {"lat": float(out[0]), "lon": float(out[1])}  # 못 찾으면 빈 값이라 IndexError 로 실패한다
+    try:
+        return cached("windows place", 300, make)
+    except subprocess.TimeoutExpired as err:
+        raise OSError("위치 확인 시간 초과") from err
+
+
 def place_name(lat, lon):
     if not (-90 <= lat <= 90 and -180 <= lon <= 180):
         raise ValueError("좌표가 잘못되었습니다")
@@ -1129,6 +1151,11 @@ class Handler(BaseHTTPRequestHandler):
             self.remote(lambda: stock_search(query.get("q", [""])[0].strip()[:40]))
         elif url.path == "/api/weather":
             self.remote(lambda: weather(float(query.get("lat", [""])[0]), float(query.get("lon", [""])[0])))
+        elif url.path == "/api/here":
+            if self.client_address[0] == self.connection.getsockname()[0]:  # 보낸 쪽과 받는 쪽 주소가 같으면 이 컴퓨터다
+                self.remote(windows_place)
+            else:
+                self.fail(403, "이 컴퓨터에서만 쓸 수 있습니다")
         elif url.path == "/api/where":
             self.remote(lambda: place_name(float(query.get("lat", [""])[0]), float(query.get("lon", [""])[0])))
         elif url.path == "/api/place":
@@ -1375,7 +1402,7 @@ def drive_list(index, rel):
     return sorted(items, key=lambda i: (not i["dir"], -i["when"]))
 
 
-WIDGET_KEYS = {"weather", "links", "unit", "zones", "clockOpt", "clips", "clipAuto", "stocks", "images", "outfit"}
+WIDGET_KEYS = {"weather", "links", "unit", "zones", "clockOpt", "clips", "clipAuto", "stocks", "images", "outfit", "mailStar"}
 SYMBOL_RE = re.compile(r"[\w.^=-]{1,20}")
 
 

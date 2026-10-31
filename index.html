@@ -209,6 +209,9 @@ a.line:hover .t, .mail:hover .t { color: var(--green); }
 .mail.unread .t { font-weight: 700; }
 .mail.reply .t { color: var(--down); }
 .mail.other .t { color: var(--mailGray); font-weight: 400; }  /* 기타는 회색, 참조는 검정 */
+#mailTabs [data-kind="star"] { color: #dc2626; font-weight: 700; }
+#mailTabs [data-kind="star"][aria-pressed="true"] { background: #dc2626; border-color: #dc2626; color: #fff; }
+.mailStar { flex: none; width: auto; margin: 0; padding: 0; align-self: center; accent-color: #dc2626; cursor: pointer; }
 .readMark { flex: none; font-size: calc(10px * var(--fs)); color: var(--muted); }
 #mail, #mailTabs { --mailGray: color-mix(in srgb, var(--muted) 70%, var(--card)); }
 #mailTabs [data-kind="read"][aria-pressed="false"] { color: var(--text); font-weight: 700; }
@@ -299,13 +302,13 @@ dialog.pop[open] { display: flex; flex-direction: column; gap: 6px; }
   background: color-mix(in srgb, var(--card) 88%, transparent); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
   border-bottom: 1px solid var(--green-soft);
 }
-#chatTop .bear { width: 34px; height: 34px; display: block; margin: 0 auto 1px; }
+#chatTop .bear { width: 50px; height: 36px; display: block; flex: none; border: 0; border-radius: 0; padding: 0; background: none; }
 #chatTop .left { position: absolute; top: 12px; left: 8px; }
 #chatTop .rt { position: absolute; top: 12px; right: 8px; }
 #chatFont { position: absolute; top: 12px; right: 34px; display: flex; align-items: center; gap: 1px; color: var(--muted); font-size: 11px; }
 #chatFont .icon { font-size: 11px; min-width: 20px; padding: 0 3px; }
 #chatAddr { display: none; font-size: calc(11px * var(--fs)); color: var(--muted); }
-#stateLine { display: flex; gap: 7px; align-items: center; justify-content: center; }
+#stateLine { display: flex; gap: 7px; align-items: center; max-width: max(190px, calc(100% - 170px)); margin-left: 40px; }
 #dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .working #dot { background: var(--green); animation: pulse 1.2s ease-in-out infinite; }
 #status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; font-size: calc(13px * var(--fs)); }
@@ -536,6 +539,7 @@ textarea { outline: 0; }
   #chatTop .rt { top: calc(12px + env(safe-area-inset-top)); }
   #chatTop .icon { min-width: 36px; height: 36px; font-size: calc(18px * var(--fs)); }
   #chatTop #toBoard { left: 48px; }
+  #stateLine { margin-left: 76px; }
   #chatAddr { display: block; }
   #scroll { padding-top: calc(112px + env(safe-area-inset-top)); padding-left: 12px; padding-right: 12px; }
   #drawer { width: 60%; padding-top: calc(12px + env(safe-area-inset-top)); }
@@ -562,6 +566,18 @@ textarea { outline: 0; }
     <circle cx="17" cy="23" r="2.3" fill="#1d1410"/><circle cx="31" cy="23" r="2.3" fill="#1d1410"/>
     <ellipse cx="24" cy="29" rx="3.2" ry="2.3" fill="#1d1410"/>
     <path d="M24 31v3m-3.5 1c1.6 1.3 5.4 1.3 7 0" stroke="#1d1410" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="bearTalk" viewBox="0 0 66 48">
+    <circle cx="11" cy="12" r="7.5" fill="#a9713f"/><circle cx="37" cy="12" r="7.5" fill="#a9713f"/>
+    <circle cx="11" cy="12" r="3.6" fill="#e8c096"/><circle cx="37" cy="12" r="3.6" fill="#e8c096"/>
+    <circle cx="24" cy="26" r="18" fill="#b98049"/>
+    <ellipse cx="24" cy="33" rx="9.5" ry="8.5" fill="#f0d5b2"/>
+    <circle cx="17" cy="23" r="2.3" fill="#1d1410"/><circle cx="31" cy="23" r="2.3" fill="#1d1410"/>
+    <ellipse cx="24" cy="28" rx="3" ry="2" fill="#1d1410"/>
+    <ellipse cx="24" cy="35.5" rx="4.6" ry="4" fill="#7a2e2a"/>
+    <ellipse cx="24" cy="37.6" rx="2.8" ry="1.7" fill="#e8757a"/>
+    <path d="M46 1h15a4.5 4.5 0 0 1 4.5 4.5v9a4.5 4.5 0 0 1-4.5 4.5h-10l-7 6 1.6-6.2a4.5 4.5 0 0 1-4.1-4.3v-9a4.5 4.5 0 0 1 4.5-4.5z" fill="#1D4ED8"/>
+    <circle cx="47" cy="10" r="1.9" fill="#fff"/><circle cx="53.5" cy="10" r="1.9" fill="#fff"/><circle cx="60" cy="10" r="1.9" fill="#fff"/>
   </symbol>
 </svg>
 
@@ -648,7 +664,7 @@ textarea { outline: 0; }
       <section class="card grow" id="mailCard" aria-label="이메일">
         <div class="head"><h2>이메일</h2>
           <div class="tools"><span class="muted small" id="mailCount"></span><button class="icon refresh" type="button" title="일정·메일 새로고침" aria-label="일정과 메일 새로고침">↻</button><a class="icon" href="https://mail.google.com/" target="_blank" rel="noopener noreferrer" title="Gmail 열기" aria-label="Gmail 열기">↗</a></div></div>
-        <div class="tabs" id="mailTabs"><button type="button" data-kind="all" aria-pressed="true">전체</button><button type="button" data-kind="reply" aria-pressed="false">답장필요</button><button type="button" data-kind="read" aria-pressed="false">참조</button><button type="button" data-kind="other" aria-pressed="false">기타</button></div>
+        <div class="tabs" id="mailTabs"><button type="button" data-kind="all" aria-pressed="true">전체</button><button type="button" data-kind="reply" aria-pressed="false">답장필요</button><button type="button" data-kind="read" aria-pressed="false">참조</button><button type="button" data-kind="star" aria-pressed="false">중요</button><button type="button" data-kind="other" aria-pressed="false">기타</button></div>
         <div class="list" id="mail"></div>
       </section>
     </div>
@@ -663,8 +679,7 @@ textarea { outline: 0; }
     <button class="icon left phone" id="toBoard" type="button" title="일정·뉴스·메일" aria-label="일정, 뉴스, 메일 보기">▦</button>
     <button class="icon rt" id="new" type="button" title="새 대화" aria-label="새 대화">＋</button>
     <div id="chatFont"><button class="icon" id="chatFontDown" type="button" title="채팅 글자 작게" aria-label="채팅 글자 작게">가−</button><span id="chatFontNow">100%</span><button class="icon" id="chatFontUp" type="button" title="채팅 글자 크게" aria-label="채팅 글자 크게">가+</button></div>
-    <svg class="bear" aria-hidden="true"><use href="#bearIcon"/></svg>
-    <div id="stateLine"><button id="jobBtn" type="button" title="진행 내용 보기" aria-haspopup="dialog">대기</button><span id="dot"></span><span id="status" role="status">대기 중</span></div>
+    <div id="stateLine"><svg class="bear" aria-hidden="true"><use href="#bearTalk"/></svg><button id="jobBtn" type="button" title="진행 내용 보기" aria-haspopup="dialog">대기</button><span id="dot"></span><span id="status" role="status">대기 중</span></div>
     <div class="addr" id="chatAddr"></div>
   </header>
   <div id="drawer">
@@ -854,10 +869,13 @@ function drawFeed() {
   $('events').innerHTML = err + eventList(f.events, loading);
   const unread = f.mail.filter(m => m.unread).length;
   $('mailCount').textContent = unread ? `안 읽음 ${unread}` : '';
-  $('mail').innerHTML = err + (f.mail.map((m, i) => mailKind !== 'all' && mailKind !== (m.kind || 'read') ? '' : `<div class="line mail ${m.kind || 'read'} ${m.unread ? 'unread' : ''}"><span class="dot ${m.unread ? '' : 'off'}"></span>
+  // 중요 메일은 사본을 저장해 최근 목록에서 밀려나도 남는다. 목록에 있으면 최신 상태를 쓴다
+  const stars = mailStars().map(s => f.mail.find(m => m.id === s.id) || s), shown = mailKind === 'star' ? stars : f.mail.filter(m => mailKind === 'all' || mailKind === (m.kind || 'read'));
+  $('mail').innerHTML = err + (shown.map(m => `<div class="line mail ${m.kind || 'read'} ${m.unread ? 'unread' : ''}"><input class="mailStar" type="checkbox" data-star="${esc(m.id)}" aria-label="중요 표시" title="중요" ${stars.some(s => s.id === m.id) ? 'checked' : ''}><span class="dot ${m.unread ? '' : 'off'}"></span>
     <a class="body" style="color:inherit;text-decoration:none" href="https://mail.google.com/mail/u/0/#inbox/${esc(m.id)}" target="_blank" rel="noopener noreferrer"><span class="t" title="${esc([m.from, m.date.slice(5)].filter(Boolean).join(' · '))}">${esc(m.subject || '(제목 없음)')}</span></a>
-    <button class="ask" type="button" data-mail="${i}">비서에게</button>${m.unread ? '' : '<span class="readMark">읽음</span>'}</div>`).join('') || `<div class="none">${loading ? '메일을 읽는 중입니다' : '표시할 메일이 없습니다'}</div>`);
+    <button class="ask" type="button" data-mail="${esc(m.id)}">비서에게</button>${m.unread ? '' : '<span class="readMark">읽음</span>'}</div>`).join('') || `<div class="none">${loading ? '메일을 읽는 중입니다' : '표시할 메일이 없습니다'}</div>`);
 }
+const mailStars = () => state.widgets?.mailStar || [];
 async function loadDash() {
   state = await api('/api/dash');
   drawAgent();
@@ -1756,8 +1774,16 @@ $('news').onclick = e => {
   if (i !== undefined) hand(`[기사] ${newsItems[i].title}\n${newsItems[i].link}\n`);
 };
 $('mail').onclick = e => {
-  const i = e.target.dataset.mail;
-  if (i !== undefined) { const m = state.feed.mail[i]; hand(`Gmail 에서 이 메일을 읽고 요약해줘. 답장이 필요하면 초안만 써줘: ${m.from} / ${m.subject}`); }
+  const id = e.target.dataset.mail;
+  if (id !== undefined) { const m = [...state.feed.mail, ...mailStars()].find(x => x.id === id); hand(`Gmail 에서 이 메일을 읽고 요약해줘. 답장이 필요하면 초안만 써줘: ${m.from} / ${m.subject}`); }
+};
+$('mail').onchange = e => {
+  const id = e.target.dataset.star;
+  if (id === undefined) return;
+  const rest = mailStars().filter(m => m.id !== id), list = e.target.checked ? [...rest, state.feed.mail.find(m => m.id === id)] : rest;
+  state.widgets = {...state.widgets, mailStar: list};
+  wsave('mailStar', list);
+  drawFeed();
 };
 $('syms').onclick = e => {
   const s = e.target.closest('[data-sym]')?.dataset.sym;
