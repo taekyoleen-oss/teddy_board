@@ -1,0 +1,7 @@
+.env
+__pycache__/
+.playwright-mcp/
+# 공개 저장소에 올리지 않는 개인 자료
+비서실장.md
+지침/
+산출물/
