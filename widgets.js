@@ -161,7 +161,13 @@ const wxFix = fresh => new Promise((ok, no) => {
 });
 async function wxPlace(fresh) {
   const c = {...WX_HOME, ...wdata.weather};
-  if (!c.auto) return c;
+  if (!c.auto) {
+    if (/[가-힣]/.test(c.name)) return c;
+    const name = (await api(`/api/where?lat=${c.lat}&lon=${c.lon}`).catch(() => ({}))).name;  // 예전에 영어로 저장된 지역을 한글로 바꿔 둔다
+    if (!name) return c;
+    wsave('weather', {...wdata.weather, name});
+    return {...c, name};
+  }
   try {
     if (fresh || !wxHere || Date.now() - wxHere.at > 1800000) {
       const {latitude: lat, longitude: lon} = (await wxFix(fresh)).coords;

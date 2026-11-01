@@ -124,6 +124,9 @@ button { cursor: pointer; border: 0; background: none; }
 #top .icon:hover { background: rgba(255, 255, 255, .14); color: #fff; }
 /* 넓은 화면에서만: 열 사이를 끌면 너비, 카드 사이를 끌면 높이 */
 @media (min-width: 1241px) { #cols { cursor: col-resize; } .col { cursor: row-resize; } .card { cursor: auto; } }
+body.locked #cols, body.locked .col { cursor: auto; }
+body.locked .grip .move, body.locked [data-move] { display: none; }
+.sizer { display: none; }
 .grow { flex: 1 1 0; }
 .head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex: none; }
 .head h2 { white-space: nowrap; margin: 0; font-size: calc(13px * var(--fs)); font-weight: 700; }
@@ -262,6 +265,12 @@ a.line:hover .t, .mail:hover .t { color: var(--green); }
 .pane[hidden] { display: none; }
 #newsTabs button { padding: 0 6px; }
 #reader { width: min(1100px, 96vw); height: 94vh; }
+#cardPop { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; gap: 0; border: 0; border-radius: 0; }
+#cardFrame { flex: 1; width: 100%; min-height: 0; border: 0; }
+#cardBar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 5px 12px; }
+#cardBar label, .cardTick { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-size: calc(11px * var(--fs)); color: var(--muted); }
+#cardBar input, .cardTick input { width: 12px; height: 12px; margin: 0; }
+.cardTick { display: flex; width: fit-content; margin-top: 5px; }
 #readerFrame { flex: 1; width: 100%; min-height: 0; border: 0; border-radius: 10px; background: #fff; }
 .memoRow { display: flex; width: 100%; text-align: left; }
 .memoRow:hover .t { color: var(--green); }
@@ -314,7 +323,7 @@ dialog.pop[open] { display: flex; flex-direction: column; gap: 6px; }
 .vtitle .ttlIcon { display: block; margin: 0 0 3px; }
 #chatTop .left { position: absolute; top: 12px; left: 8px; }
 #chatTop .rt { position: absolute; top: 12px; right: 8px; }
-#chatFont { position: absolute; top: 12px; right: 34px; display: flex; align-items: center; gap: 1px; color: var(--muted); font-size: 11px; }
+#chatFont { position: absolute; top: 12px; right: 48px; display: flex; align-items: center; gap: 1px; color: var(--muted); font-size: 11px; }
 #chatFont .icon { font-size: 11px; min-width: 20px; padding: 0 3px; }
 #chatAddr { display: none; font-size: calc(11px * var(--fs)); color: var(--muted); }
 #stateLine { display: flex; gap: 7px; align-items: center; max-width: max(190px, calc(100% - 170px)); margin-left: 40px; }
@@ -408,6 +417,11 @@ textarea { outline: 0; }
   .col, .card { flex: none !important; }
   .grow, #newsCard { height: 330px; }
   #marketCard { height: 560px; }
+  .card[style*="--ph"] { height: var(--ph) !important; }
+  body:not(.locked) .sizer {
+    display: block; position: sticky; bottom: -4px; z-index: 2; flex: none; grid-column: 1 / -1; height: 20px; margin-top: 2px;
+    border-radius: 6px; background: var(--tint); color: var(--muted); font-size: 12px; line-height: 20px; text-align: center; cursor: ns-resize; touch-action: none; user-select: none;
+  }
 }
 /* 휴대폰: 채팅이 기본, 카드 판은 버튼으로 바꿔 본다 */
 .phone { display: none; }
@@ -546,13 +560,16 @@ textarea { outline: 0; }
   body.board #board { display: flex; }
   body.board #chat { display: none; }
   #top { height: calc(40px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
-  #top .right, #top .addr { display: none; }
+  #top .right, #top .addr, #top > img, #clock, #fontNow { display: none; }
+  #top { gap: 4px; padding-left: 6px; padding-right: 6px; }
   #chatTop { padding-top: calc(8px + env(safe-area-inset-top)); }
   #chatTop .left { top: calc(12px + env(safe-area-inset-top)); }
   #chatTop .rt { top: calc(12px + env(safe-area-inset-top)); }
   #chatTop .icon { min-width: 36px; height: 36px; font-size: calc(18px * var(--fs)); }
   #chatTop #toBoard { left: 48px; }
   #stateLine { margin-left: 76px; }
+  #chatFont { top: calc(48px + env(safe-area-inset-top)); right: 8px; }
+  #chatFont .icon { min-width: 30px; height: 20px; font-size: 12px; }
   #chatAddr { display: block; }
   #scroll { padding-top: calc(112px + env(safe-area-inset-top)); padding-left: 12px; padding-right: 12px; }
   #drawer { width: 60%; padding-top: calc(12px + env(safe-area-inset-top)); }
@@ -575,7 +592,7 @@ textarea { outline: 0; }
 </svg>
 
 <div id="board">
-  <div id="top"><img src="/icon.png" alt="" style="width:26px;height:26px;object-fit:contain;flex:none"><span id="clock"></span><button class="icon" id="fontDown" type="button" title="전체 글자 줄이기" aria-label="전체 글자 줄이기">가−</button><span id="fontNow" class="small" aria-live="polite"></span><button class="icon" id="fontUp" type="button" title="전체 글자 키우기" aria-label="전체 글자 키우기">가＋</button><button class="icon" id="boardReset" type="button" title="글자·배치를 처음 상태로" aria-label="글자와 배치 초기화">↺</button><button class="icon" id="widgetAdd" type="button" style="color:#fff" title="위젯 추가·빼기" aria-label="위젯 추가와 빼기">＋ 위젯</button><div id="tabs" role="tablist" aria-label="위젯 탭"></div><button class="icon" id="tabPlus" type="button" title="탭 추가" aria-label="탭 추가">＋</button><button class="icon phone" id="toChat" type="button" style="margin-left:auto;color:#fff" title="대화로" aria-label="대화로 돌아가기">💬</button><span class="right" id="topInfo"></span><span class="addr" title="휴대폰에서 칠 주소"></span></div>
+  <div id="top"><img src="/icon.png" alt="" style="width:26px;height:26px;object-fit:contain;flex:none"><span id="clock"></span><button class="icon" id="fontDown" type="button" title="전체 글자 줄이기" aria-label="전체 글자 줄이기">가−</button><span id="fontNow" class="small" aria-live="polite"></span><button class="icon" id="fontUp" type="button" title="전체 글자 키우기" aria-label="전체 글자 키우기">가＋</button><button class="icon" id="boardReset" type="button" title="글자·배치를 처음 상태로" aria-label="글자와 배치 초기화">↺</button><button class="icon" id="widgetAdd" type="button" style="color:#fff" title="위젯 추가·빼기" aria-label="위젯 추가와 빼기">＋ 위젯</button><button class="icon" id="boardLock" type="button" style="color:#fff"></button><div id="tabs" role="tablist" aria-label="위젯 탭"></div><button class="icon" id="tabPlus" type="button" title="탭 추가" aria-label="탭 추가">＋</button><button class="icon phone" id="toChat" type="button" style="margin-left:auto;color:#fff" title="대화로" aria-label="대화로 돌아가기">💬</button><span class="right" id="topInfo"></span><span class="addr" title="휴대폰에서 칠 주소"></span></div>
   <div id="stash" hidden></div>
   <div id="cols">
 
@@ -602,7 +619,7 @@ textarea { outline: 0; }
           </div>
           <div class="gauges">
             <div class="gauge" id="lenaToday"><div><span class="muted small">오늘 호출</span><b id="lenaCalls">–</b></div></div>
-            <div class="gauge" id="lenaWeek"><div><span class="muted small">주간</span><span class="muted small" id="lenaReset"></span><b id="lenaPct">–</b></div><div class="bar-mini"><i id="lenaBar"></i></div></div>
+            <div class="gauge" id="lenaWeek"><div><span class="muted small">빌드 주간</span><span class="muted small" id="lenaReset"></span><b id="lenaPct">–</b></div><div class="bar-mini"><i id="lenaBar"></i></div></div>
           </div>
           <div class="pick" style="margin-bottom:0">
             <label>모델<select id="lenaModel"></select></label>
@@ -710,6 +727,10 @@ textarea { outline: 0; }
 </main>
 <div id="drop">여기에 놓으세요</div>
 <div id="dropLine"></div>
+<dialog class="pop" id="cardPop" aria-label="답변 카드뉴스">
+  <div id="cardBar"><label title="체크하면 산출물의 카드뉴스 폴더에 저장하고, 해제하면 지웁니다"><input id="cardKeep" type="checkbox">결과물에 포함</label><button class="icon" id="cardClose" type="button" aria-label="닫기">×</button></div>
+  <iframe id="cardFrame" title="카드뉴스" sandbox="allow-scripts"></iframe>
+</dialog>
 <dialog class="pop" id="reader" aria-label="카드뉴스 읽기">
   <div class="head" style="margin:0"><h2 id="readerTitle" style="overflow:hidden;text-overflow:ellipsis"></h2><div class="tools"><button class="pill ghost" type="button" id="readerFiles">폴더 파일 보기</button><a class="icon" id="readerNew" target="_blank" rel="noopener" title="새 탭에서 열기" aria-label="새 탭에서 열기">↗</a><button class="icon" type="button" data-shut aria-label="닫기">×</button></div></div>
   <iframe id="readerFrame" title="카드뉴스" sandbox="allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -835,7 +856,7 @@ function drawAgent() {
   $('lenaCalls').textContent = state.lenaUsage.calls + '회';
   $('lenaToday').title = `그록 표시 환산값 $${state.lenaUsage.cost.toFixed(2)} (청구액 아님)`;
   $('lenaPct').textContent = pct(lu.used); $('lenaBar').style.width = pct(lu.used || 0); $('lenaReset').textContent = resetText(lu.reset, true);
-  $('lenaWeek').title = lu.updated ? `마지막 확인 ${new Date(lu.updated * 1000).toLocaleString('ko-KR')}${lu.extra ? ' · 추가 결제 사용 있음' : ''}` : '사용량을 아직 읽지 못했습니다';
+  $('lenaWeek').title = 'Grok Build(레나·CLI) 사용량입니다. Grok 전체 사용량이 아닙니다.' + (lu.updated ? ` 마지막 확인 ${new Date(lu.updated * 1000).toLocaleString('ko-KR')}${lu.extra ? ' · 추가 결제 사용 있음' : ''}` : ' 아직 읽지 못했습니다');
   $('sessionPct').textContent = pct(u.session); $('weekPct').textContent = pct(u.week);
   $('sessionBar').style.width = pct(u.session === undefined ? 0 : u.session); $('weekBar').style.width = pct(u.week === undefined ? 0 : u.week);
   $('sessionReset').textContent = resetText(u.sessionReset); $('weekReset').textContent = resetText(u.weekReset, true);
@@ -906,7 +927,8 @@ async function loadDash() {
   syncWidgets();
   return state;
 }
-function hand(text) { showBoard(false); input.value = text; resize(); input.focus(); }
+let newsLink = '';  // 입력창의 [기사] 제목에 보낼 때 걸 주소
+function hand(text, link = '') { newsLink = link; showBoard(false); input.value = text; resize(); input.focus(); }
 function showBoard(on) {
   document.body.classList.toggle('board', on);
   if (on) loadMarket();  // 숨겨진 동안에는 그래프 크기를 잴 수 없다
@@ -955,7 +977,7 @@ $('events').addEventListener('toggle', e => { const key = e.target.dataset.key; 
 
 // ── 판 배치: 글자 크기·열 너비·카드 높이·카드 위치. 기기마다 따로 저장한다 ──
 const cols = $('cols'), MIN_W = 220, MIN_H = 90, FIT_W = 1280;  // FIT_W: 표시 배율이 그대로 적용되는 창 너비
-let boardFont = 100, propsCard = null;
+let boardFont = 100, propsCard = null, boardLocked = true;
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 const heights = list => list.map(c => c.getBoundingClientRect().height);
 const widths = list => list.map(c => c.getBoundingClientRect().width);
@@ -973,23 +995,33 @@ function setChatFont(pct) {
   document.documentElement.style.setProperty('--chatFont', chatFont / 100);
   $('chatFontNow').textContent = chatFont + '%';
 }
+function setLock(on) {  // 고정이면 위젯 이동과 크기 조절을 모두 막는다
+  boardLocked = on;
+  document.body.classList.toggle('locked', on);
+  const b = $('boardLock'), word = on ? '위젯 고정됨. 누르면 이동·크기 조절 가능' : '위젯 이동·크기 조절 중. 누르면 고정';
+  b.textContent = on ? '🔒' : '🔓';
+  b.title = word;
+  b.setAttribute('aria-label', word);
+  b.setAttribute('aria-pressed', on);
+}
 function setChatAdj(px) { chatAdj = clamp(px, -60, 60); document.documentElement.style.setProperty('--chatAdj', chatAdj + 'px'); }
 function saveBoard() {
   tabs[tabNow] = {
     name: tabs[tabNow].name, cols: cols.style.getPropertyValue('--cols'), rest: [...cols.children].map(c => c.style.getPropertyValue('--rest')),
-    cards: [...cols.children].map(c => [...c.children].map(k => ({id: k.id, flex: k.style.flex, own: k.style.getPropertyValue('--own')}))),
+    cards: [...cols.children].map(c => [...c.children].map(k => ({id: k.id, flex: k.style.flex, own: k.style.getPropertyValue('--own'), ph: k.style.getPropertyValue('--ph')}))),
   };
-  localStorage.board = JSON.stringify({font: boardFont, fontV: 2, widgets: true, chatAdj, chatFont, tabs, tabNow});
+  localStorage.board = JSON.stringify({font: boardFont, fontV: 2, widgets: true, chatAdj, chatFont, tabs, tabNow, locked: boardLocked});
 }
 function layTab(t) {
   [...cols.children].forEach((col, i) => { if (t.rest?.[i]) col.style.setProperty('--rest', t.rest[i]); else col.style.removeProperty('--rest'); });
   if (t.cols) cols.style.setProperty('--cols', t.cols); else cols.style.removeProperty('--cols');
-  (t.cards || []).forEach((list, i) => list.forEach(({id, flex, own}) => {
+  (t.cards || []).forEach((list, i) => list.forEach(({id, flex, own, ph}) => {
     const card = $(id) || makeWidget(id);
     if (!card) return;
     cols.children[i].append(card);
     card.style.flex = flex;
     if (own) card.style.setProperty('--own', own);
+    if (ph) card.style.setProperty('--ph', ph);
   }));
 }
 function loadBoard() {
@@ -997,6 +1029,7 @@ function loadBoard() {
   setFont(saved.fontV === 2 ? saved.font : wide() ? 80 : 100);
   setChatAdj(saved.chatAdj || 0);
   setChatFont(saved.chatFont || 100);
+  setLock(saved.locked !== false);
   tabs = saved.tabs || [{name: '홈', cols: saved.cols, rest: saved.rest, cards: saved.cards}];  // 탭이 생기기 전 배치는 첫 탭이 된다
   tabNow = clamp(saved.tabNow || 0, 0, tabs.length - 1);
   tabs.forEach((t, i) => { if (i !== tabNow) (t.cards || []).flat().forEach(({id}) => { const card = $(id) || makeWidget(id); if (card) $('stash').append(card); }); });
@@ -1131,6 +1164,10 @@ function dragHeight(e) {
     list[i].style.flex = `${start[i] - d} 1 0`;
   });
 }
+function dragSize(e, card) {  // 좁은 화면은 한 줄이라 이 카드의 높이만 바꾼다
+  const h = card.getBoundingClientRect().height, y = e.clientY;
+  track(e, ev => card.style.setProperty('--ph', Math.round(Math.max(MIN_H, h + ev.clientY - y)) + 'px'));
+}
 function dragCard(e, card) {
   const line = $('dropLine');
   let col = null, before = null, tab = null;
@@ -1153,7 +1190,7 @@ function dragCard(e, card) {
     const from = card.parentElement, to = tab ? tabAt(tab) : -1;
     tab?.classList.remove('over');
     if (to >= 0 && to !== tabNow) {  // 다른 탭 위에 놓으면 그 탭의 첫 열로 옮긴다
-      (tabs[to].cards ||= [[], [], []])[0].push({id: card.id, flex: '1 1 0', own: card.style.getPropertyValue('--own')});
+      (tabs[to].cards ||= [[], [], []])[0].push({id: card.id, flex: '1 1 0', own: card.style.getPropertyValue('--own'), ph: card.style.getPropertyValue('--ph')});
       $('stash').append(card);
       evenCol(from);
       return;
@@ -1187,8 +1224,11 @@ function setOwn(pct) {
   $('propsFont').value = pct; $('propsNow').textContent = pct + '%';
   saveBoard();
 }
-const addGrip = c => (c.querySelector('.head, .who') || c).insertAdjacentHTML('beforeend',
-  '<div class="grip"><button class="move" type="button" title="끌어서 옮기기" aria-label="항목 옮기기">⠿</button><button class="prop" type="button" title="속성" aria-label="항목 속성">가</button></div>');
+const addGrip = c => {
+  (c.querySelector('.head, .who') || c).insertAdjacentHTML('beforeend',
+    '<div class="grip"><button class="move" type="button" title="끌어서 옮기기" aria-label="항목 옮기기">⠿</button><button class="prop" type="button" title="속성" aria-label="항목 속성">가</button></div>');
+  c.insertAdjacentHTML('beforeend', '<div class="sizer" title="위아래로 끌어 높이 조절">↕</div>');
+};
 document.querySelectorAll('.card').forEach(addGrip);
 const pickCard = card => {
   document.querySelector('.card.picked')?.classList.remove('picked');
@@ -1196,8 +1236,10 @@ const pickCard = card => {
 };
 cols.addEventListener('pointerdown', e => {
   pickCard(e.target.closest('.card'));  // 빈 곳을 누르면 선택 해제
-  const grab = e.target.closest('.move');
+  if (boardLocked) return;
+  const grab = e.target.closest('.move'), size = e.target.closest('.sizer');
   if (grab) dragCard(e, grab.closest('.card'));
+  else if (size) dragSize(e, size.closest('.card'));
   else if (wide() && e.target === cols) dragWidth(e);
   else if (wide() && e.target.classList.contains('col')) dragHeight(e);
 });
@@ -1205,6 +1247,7 @@ cols.addEventListener('click', e => { const hit = e.target.closest('.prop'); if 
 $('propsFont').oninput = e => setOwn(+e.target.value);
 $('propsReset').onclick = () => setOwn(+propsCard.dataset.own || 100);
 $('props').addEventListener('click', e => { const way = e.target.dataset.move; if (way) nudgeCard(propsCard, way); });
+$('boardLock').onclick = () => { setLock(!boardLocked); saveBoard(); };
 $('fontDown').onclick = () => { setFont(boardFont - 5); saveBoard(); };
 $('fontUp').onclick = () => { setFont(boardFont + 5); saveBoard(); };
 $('chatFontDown').onclick = () => { setChatFont(chatFont - 10); saveBoard(); resize(); };
@@ -1287,6 +1330,9 @@ $('outputs').onclick = e => {
 };
 $('readerFiles').onclick = () => { drivePath = driveParts($('readerTitle').dataset.folder).join('/'); $('reader').close(); loadDrive(); };
 $('reader').addEventListener('close', () => { $('readerFrame').src = 'about:blank'; });
+$('cardClose').onclick = () => $('cardPop').close();
+$('cardPop').addEventListener('close', () => { $('cardFrame').src = 'about:blank'; });
+addEventListener('message', e => { if (e.source === $('cardFrame').contentWindow && e.data === 'closeCards') $('cardPop').close(); });
 $('driveReload').onclick = loadDrive;
 $('driveTabs').onclick = e => { const i = e.target.dataset.root; if (i !== undefined) { driveRoot = +i; drivePath = ''; loadDrive(); } };
 $('drive').onclick = e => {
@@ -1550,8 +1596,43 @@ function fileHtml(files) {
     ? `<img src="/uploads/${encodeURIComponent(f.stored)}" alt="${esc(f.name)}">`
     : `<span class="file">📎 ${esc(f.name)}</span>`).join('') + '</div>';
 }
-function drawUser(text, files) { bubble('me', fileHtml(files) + esc(text)); }
-function drawBot(text, who) { bubble(who === 'lena' ? 'bot lena' : 'bot', markdown(text)); }
+const LINK_ATTR = 'target="_blank" rel="noopener noreferrer"';
+const userText = text => esc(text)  // 긴 주소는 숨기고 제목이나 '링크'에 건다
+  .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, `<a href="$2" ${LINK_ATTR}>$1</a>`)
+  .replace(/(^|\s)(https?:\/\/[^\s<]+)/g, `$1<a href="$2" ${LINK_ATTR}>링크</a>`);
+function drawUser(text, files) { bubble('me', fileHtml(files) + userText(text)); }
+function drawBot(text, who) { return bubble(who === 'lena' ? 'bot lena' : 'bot', markdown(text)); }
+function cardTick(b, id, at, m) {
+  if (m?.role !== 'assistant' || m.text.length < 80) return;  // 짧은 답은 카드로 만들 내용이 없다
+  const box = document.createElement('label');
+  box.className = 'cardTick';
+  box.innerHTML = '<input type="checkbox"><span>카드뉴스로 보기</span>';
+  const tick = box.firstChild, word = box.lastChild;
+  tick.checked = !!m.cards;
+  tick.onchange = async () => {  // 만든 뒤에는 누를 때마다 다시 열 뿐 해제되지 않는다
+    tick.checked = tick.disabled = true;
+    word.textContent = '카드뉴스 만드는 중…';
+    try {
+      openCards(id, at, await api('/api/cardnews', {conv: id, at}));
+      word.textContent = '카드뉴스로 보기';
+    } catch (err) {
+      tick.checked = false;
+      word.textContent = '카드뉴스 실패: ' + err.message;
+    }
+    tick.disabled = false;
+  };
+  b.append(box);
+}
+function openCards(id, at, info) {
+  $('cardFrame').src = `/api/cardnews?id=${encodeURIComponent(id)}&at=${at}`;
+  $('cardKeep').checked = info.kept;  // 기본은 미포함. 포함한 카드만 다시 열 때 체크되어 있다
+  $('cardKeep').onchange = async e => {
+    const want = e.target.checked;
+    try { await api('/api/cardnews', {conv: id, at, keep: want}); loadOutputs(); }
+    catch (err) { e.target.checked = !want; setStatus('결과물 저장 실패: ' + err.message); }
+  };
+  $('cardPop').showModal();
+}
 function empty() { thread.innerHTML = '<div class="empty"><img class="emptyDuo" src="/img/duo.png?2" alt="">무엇을 도와드릴까요, 교수님?</div>'; }
 
 async function drawList() {
@@ -1582,7 +1663,7 @@ async function openConv(id) {
   if (!id) { empty(); drawList(); input.focus(); return; }
   const conv = await api('/api/conversation?id=' + id);
   if (turn !== opening) return;
-  conv.messages.forEach(m => m.role === 'user' ? drawUser(m.text, m.files) : drawBot(m.text, m.bot));
+  conv.messages.forEach((m, at) => m.role === 'user' ? drawUser(m.text, m.files) : cardTick(drawBot(m.text, m.bot), id, at, m));
   drawList();
   toBottom();
   if (conv.busy) follow(id);
@@ -1641,7 +1722,10 @@ function follow(id) {
     drawJobs();
     const now = await api('/api/conversation?id=' + id);
     if (now.busy && current === id) openConv(id);  // 기다리던 다음 요청이 이어서 시작됐다
-    else drawList();
+    else {
+      drawList();
+      if (current === id) cardTick(b, id, now.messages.length - 1, now.messages.at(-1));
+    }
   });
 }
 
@@ -1710,7 +1794,7 @@ function resize() {
 }
 async function send(e) {
   e?.preventDefault();
-  const text = input.value.trim();
+  const text = input.value.trim().replace(/\[기사\] (.+)/, (all, t) => newsLink ? `[기사] [${t.replace(/[[\]]/g, '')}](${newsLink})` : all);
   if (uploading || (!text && !pending.length)) return;
   const files = pending.map(p => ({name: p.name, stored: p.stored}));
   const wasBusy = busy;
@@ -1719,7 +1803,7 @@ async function send(e) {
   try {
     const res = await api('/api/send', {id: current, text, files});
     current = res.id;
-    input.value = ''; pending = []; drawTray(); resize();
+    input.value = ''; newsLink = ''; pending = []; drawTray(); resize();
     drawJobs();
     if (res.queued) {  // 앞 작업이 끝나면 차례가 온다. 무관한 일이면 서버가 새 대화로 떼어 낸다
       setBusy(wasBusy);
@@ -1775,7 +1859,7 @@ input.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229 && !phone()) { e.preventDefault(); send(e); }
 });
 $('composer').addEventListener('submit', send);
-$('new').onclick = () => openConv(null);
+$('new').onclick = () => { if (confirm('새 대화를 시작할까요?')) openConv(null); };
 $('openList').onclick = () => $('drawer').classList.toggle('on');
 $('closeList').onclick = () => $('drawer').classList.remove('on');
 $('attach').onclick = e => {
@@ -1802,7 +1886,7 @@ document.querySelectorAll('.refresh').forEach(b => b.onclick = async () => {
 $('newsTabs').onclick = e => { const t = e.target.dataset.topic; if (t) { topic = t; loadNews(); } };
 $('news').onclick = e => {
   const i = e.target.dataset.news;
-  if (i !== undefined) hand(`@레나 [기사] ${newsItems[i].title}\n${newsItems[i].link}\n`);
+  if (i !== undefined) hand(`@레나 [기사] ${newsItems[i].title}\n`, newsItems[i].link);
 };
 $('mail').onclick = e => {
   const id = e.target.dataset.mail;
