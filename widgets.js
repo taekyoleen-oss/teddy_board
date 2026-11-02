@@ -103,6 +103,7 @@ function syncWidgets() {
   const next = state.widgets || {}, first = !wDrawn, old = JSON.stringify(wdata), now = JSON.stringify(next);
   wdata = next;
   wDrawn = true;
+  takeTabPlan(next.tabPlan);
   if (!first && old === now) return;
   Object.keys(W).forEach(key => {
     const card = $('w-' + key);
