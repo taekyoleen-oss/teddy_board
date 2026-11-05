@@ -146,6 +146,7 @@ body.locked .grip .move, body.locked [data-move] { display: none; }
 .bear { width: 30px; height: 30px; flex: none; object-fit: contain; }
 #agent .helper { border-top: 1px solid var(--hair); margin-top: 5px; padding-top: 4px; }
 #agent .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#agent .who > .switch { order: 1; }  /* 테디 줄의 ⟳·카드 단추 뒤로 보내 레나 스위치와 같은 오른쪽 끝에 맞춘다 */
 #agent b { font-size: calc(15px * var(--fs)); display: block; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; }
 .switch { position: relative; width: 30px; height: 16px; flex: none; margin-left: auto; }
 .switch input { position: absolute; inset: -6px; width: auto; height: auto; margin: 0; opacity: 0; cursor: pointer; }
@@ -192,6 +193,9 @@ a.line:hover .t, .mail:hover .t { color: var(--green); }
 .ev.tight summary { padding: 0; }
 .line.ev.tight { padding: 2px; }
 #news .line { padding: 6px 2px; }
+#news summary { display: flex; gap: 6px; align-items: flex-start; }
+#news .heart { flex: none; padding: 0 2px; font-size: calc(16px * var(--fs)); line-height: 1.2; color: #b0bec5; }
+#news .heart[aria-pressed="true"] { color: #e11d48; }
 #news .t { display: block; white-space: normal; font-weight: 600; line-height: 1.35; }
 #news .src { margin: 0; font-size: 1em; font-weight: inherit; color: inherit; white-space: normal; }
 #news time { display: block; margin-top: 2px; font-size: .82em; font-weight: 400; color: var(--muted); }
@@ -215,6 +219,10 @@ a.line:hover .t, .mail:hover .t { color: var(--green); }
 #mailTabs [data-kind="star"] { color: #dc2626; font-weight: 700; }
 #mailTabs [data-kind="star"][aria-pressed="true"] { background: #dc2626; border-color: #dc2626; color: #fff; }
 .mailStar { flex: none; width: auto; margin: 0; padding: 0; align-self: center; accent-color: #dc2626; cursor: pointer; }
+.mail button.body { all: unset; flex: 1; min-width: 0; cursor: pointer; }
+.mail button.body:focus-visible { outline: 2px solid var(--green); border-radius: 4px; }
+.mail button.body[aria-expanded="true"] .t { font-weight: 700; }
+.mailSum { margin-left: 26px; white-space: pre-line; }
 .readMark { flex: none; font-size: calc(10px * var(--fs)); color: var(--muted); }
 #mail, #mailTabs { --mailGray: color-mix(in srgb, var(--muted) 70%, var(--card)); }
 #mailTabs [data-kind="read"][aria-pressed="false"] { color: var(--text); font-weight: 700; }
@@ -265,6 +273,11 @@ a.line:hover .t, .mail:hover .t { color: var(--green); }
 .pane[hidden] { display: none; }
 #newsTabs button { padding: 0 6px; }
 #reader { width: min(1100px, 96vw); height: 94vh; }
+#reader.full { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; }
+.fcard { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 2px 0; padding: 4px 10px; border: 1px solid var(--green); border-radius: 10px; background: var(--card); overflow-wrap: anywhere; }
+.fcard button, .fcard a { border: 0; background: none; padding: 0; color: var(--green-deep); font: inherit; font-size: .9em; font-weight: 700; cursor: pointer; text-decoration: none; }
+.sugg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.sugg button { border: 1px solid var(--green); border-radius: 999px; background: var(--card); color: var(--green-deep); padding: 3px 10px; font: inherit; font-size: .92em; cursor: pointer; }
 #cardPop { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; gap: 0; border: 0; border-radius: 0; }
 #cardFrame { flex: 1; width: 100%; min-height: 0; border: 0; }
 #cardBar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding: 5px 12px; }
@@ -284,6 +297,11 @@ dialog.pop { border: 1px solid var(--glass-edge); border-radius: 16px; padding: 
 dialog.pop::backdrop { background: rgba(0, 30, 43, .35); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
 dialog.pop[open] { display: flex; flex-direction: column; gap: 6px; }
 #editor, #sheet { width: min(920px, 92vw); height: min(760px, 88vh); }
+/* 위젯 확대: 카드 자체를 팝업으로 옮겨 크게 보이고, 닫으면 제자리로 돌린다 */
+#zoomPop { width: min(1100px, 94vw); height: 88dvh; max-width: none; max-height: none; padding: 0; border: 0; background: none; box-shadow: none; overflow: visible; }
+#zoomPop > .card { flex: 1 1 auto !important; height: auto !important; min-height: 0; --fs: calc(var(--font) * var(--own, 1) * 1.3); }
+#zoomPop .grip { opacity: 1; }
+#zoomPop .grip .move, #zoomPop .grip .prop, #zoomPop .sizer { display: none; }
 #editor[data-kind="todo"] { height: auto; }
 #editor[data-kind="todo"] .onlyMemo, #editor[data-kind="memo"] .onlyTodo { display: none; }
 #cats { width: min(320px, 92vw); }
@@ -330,13 +348,16 @@ dialog.pop[open] { display: flex; flex-direction: column; gap: 6px; }
 .vtitle .ttlIcon { display: block; margin: 0 0 3px; }
 #chatTop .left { position: absolute; top: 12px; left: 8px; }
 #chatTop .rt { position: absolute; top: 12px; right: 8px; }
-#chatFont { position: absolute; top: 12px; right: 48px; display: flex; align-items: center; gap: 1px; color: var(--muted); font-size: 11px; }
+/* 머리 둘째 줄: (휴대폰) 주소 · 글자 크기. 첫 줄과 겹치지 않게 따로 둔다 */
+#chatTools { display: flex; align-items: center; gap: 6px; }  /* PC 에서는 주소를 숨기고 글자 크기는 첫 줄로 올려 높이 0 */
+/* 글자 크기: PC 는 첫 줄 ＋(새 대화) 왼쪽에 12px 띄워 둔다. 휴대폰은 둘째 줄 오른쪽 */
+#chatFont { position: absolute; top: 12px; right: calc(20px + max(22px, 13px * var(--fs) + 10px)); display: flex; flex: none; align-items: center; gap: 1px; color: var(--muted); font-size: 11px; }
 #chatFont .icon { font-size: 11px; min-width: 20px; padding: 0 3px; }
-#chatAddr { display: none; font-size: calc(11px * var(--fs)); color: var(--muted); }
-#stateLine { display: flex; gap: 7px; align-items: center; max-width: max(190px, calc(100% - 170px)); margin-left: 40px; }
+#chatAddr { display: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(11px * var(--fs)); color: var(--muted); }
+#stateLine { display: flex; gap: 7px; align-items: center; max-width: calc(100% - 158px); margin-left: 40px; }
 #dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .working #dot { background: var(--green); animation: pulse 1.2s ease-in-out infinite; }
-#status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; font-size: calc(13px * var(--fs)); }
+#status { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; font-size: calc(13px * var(--fs)); }
 @keyframes pulse { 50% { opacity: .3; transform: scale(.8); } }
 #drawer {
   position: absolute; z-index: 4; top: 0; bottom: 0; left: 0; width: 82%; padding: 12px 10px; display: none; flex-direction: column; gap: 8px;
@@ -356,7 +377,9 @@ dialog.pop[open] { display: flex; flex-direction: column; gap: 6px; }
 .me .bubble { max-width: 78%; }  /* 내 말은 오른쪽, 비서 답은 왼쪽(아바타)으로 갈리게 폭을 줄인다 */
 .row.bot, .row.note { padding-right: 12%; }  /* 비서 답·안내는 오른쪽을 비워 내 말과 갈린다 */
 .tag { flex: none; font-size: calc(11px * var(--fs)); color: var(--muted); }  /* 내 질문 옆: 예정 / 진행중 */
-.tag.on { color: var(--green-deep); font-weight: 700; }
+.tag.on { color: var(--green-deep); font-weight: 700; font-size: calc(13px * var(--fs)); animation: hourglass 1.6s ease-in-out infinite; }  /* 진행중 = 흘러내리는 모래시계 */
+@keyframes hourglass { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .tag.on { animation: none; } }
 .bubble { max-width: 92%; padding: 7px 12px; border-radius: 14px; min-width: 0; background: var(--glass); line-height: 1.45; }
 .me .bubble { background: linear-gradient(135deg, color-mix(in srgb, var(--green) 30%, transparent), color-mix(in srgb, var(--green) 12%, transparent));
   border: 1px solid color-mix(in srgb, var(--green) 50%, transparent); border-bottom-right-radius: 5px; white-space: pre-wrap;
@@ -367,7 +390,6 @@ dialog.pop[open] { display: flex; flex-direction: column; gap: 6px; }
 .lena .bubble { background: #F5F5F7; border-color: #E0E0E5; }
 .ava { width: 30px; height: 30px; flex: none; object-fit: contain; margin-right: 5px; }
 .emptyDuo { display: block; width: min(240px, 70%); margin: 0 auto 8px; }
-#verifyBtn { flex: none; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--hair); border-radius: 999px; background: none; cursor: pointer; font-size: .82em; }
 .err { color: var(--up); }
 .bubble > :first-child, .bubble > div > :first-child { margin-top: 0; }
 .bubble > :last-child, .bubble > div > :last-child { margin-bottom: 0; }
@@ -396,6 +418,23 @@ dialog.pop[open] { display: flex; flex-direction: column; gap: 6px; }
 .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
 form { position: absolute; z-index: 2; bottom: 12px; left: 12px; right: 12px; }
 #tray { margin-bottom: 6px; }
+#workChip { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px; padding: 3px 4px 3px 12px; border-radius: 999px; border: 1.5px solid var(--green); background: var(--card); font-size: 13px; max-width: 100%; }
+#workChip[hidden] { display: none; }
+#workChip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#workChip button { width: 22px; height: 22px; border-radius: 50%; line-height: 1; flex: none; }
+#workChip button.ro { width: auto; padding: 0 10px; border-radius: 999px; font-size: 12px; white-space: nowrap; }
+#workChip button.ro[aria-pressed="true"] { background: #fde8e8; color: #c81e1e; }
+.jobFiles ul, #jobList details ul { margin: 2px 0 4px; padding-left: 16px; }
+#jobList button.link { background: none; border: 0; padding: 1px 0; color: var(--green-deep); text-decoration: underline; cursor: pointer; text-align: left; }
+#diffPop { width: min(760px, 94vw); }
+#diffBody { max-height: 60vh; overflow: auto; margin: 0; padding: 10px; border-radius: 10px; background: rgba(0,0,0,.04); font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+#diffBody .add { background: #dcfce7; color: #166534; }
+#diffBody .del { background: #fee2e2; color: #991b1b; text-decoration: line-through; }
+#diffBody .hunk { color: #64748b; }
+#workPop { width: min(480px, 92vw); }
+#workPath { font-size: 12px; opacity: .75; word-break: break-all; }
+#workList { max-height: 50vh; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+#workList button { text-align: left; padding: 8px 12px; border-radius: 10px; }
 #tray .file { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 12px; }
 #tray .file img { height: 24px; width: 24px; object-fit: cover; border-radius: 6px; }
 #tray .file button { width: 22px; height: 22px; border-radius: 50%; line-height: 1; }
@@ -406,11 +445,17 @@ textarea { outline: 0; }
 #attach { width: 36px; height: 36px; flex: none; border-radius: 999px; font-size: calc(19px * var(--fs)); line-height: 1; color: var(--muted); }
 #attach:hover { background: var(--tint); }
 #send { height: 36px; flex: none; padding: 0 17px; border-radius: 999px; background: var(--green); color: #fff; font-weight: 700; }
-#jobBtn { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-weight: 700; font-size: calc(12px * var(--fs)); color: #fff; background: #16a34a; flex: none; }
+#jobBtn { display: inline-block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 1px 8px; border-radius: 999px; font-weight: 700; font-size: calc(12px * var(--fs)); color: #fff; background: #16a34a; flex: 0 1 auto; }  /* 좁으면 … 로 줄여 글자 크기 칸과 겹치지 않게 */
 #jobBtn.on { background: #dc2626; }
 .jobRow { border: 1px solid var(--hair); border-radius: 10px; padding: 6px 8px; margin-top: 5px; }
 .jobRow .jobHead { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.jobRow .jobText { flex: 1 1 100%; overflow-wrap: anywhere; }
+a.att { display: inline-block; margin: 1px 0; padding: 1px 9px; border: 1px solid var(--green); border-radius: 999px; color: var(--green-deep); background: var(--card); text-decoration: none; overflow-wrap: anywhere; }
+a.att:hover { background: var(--tint); }
+.jobRow .jobName { all: unset; flex: 1; min-width: 6em; font-weight: 600; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.jobRow .jobName:hover { color: var(--green); }
+.jobRow .jobName:focus-visible { outline: 2px solid var(--green); border-radius: 4px; }
+.jobRow .jobNow { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.jobRow details summary { cursor: pointer; }
 .jobRow.running { border-color: #dc2626; }
 .jobRow ol.jobSteps { list-style: none; padding-left: 0; }
 .jobSteps li { padding: 1px 0; overflow-wrap: anywhere; }
@@ -460,6 +505,18 @@ textarea { outline: 0; }
 #w-weather .head { position: absolute; right: 8px; top: 3px; margin: 0; z-index: 1; }
 #w-weather .head h2 { display: none; }
 #w-weather .wbody { flex: none; height: calc(84px * var(--fs) + 46px); }  /* 세 보기 모두 일자별이 다 들어가는 높이로 고정 */
+/* 이슈: 위 알약 탭 + 아래 긴 글 카드(빨간 배지·굵은 제목·굵은 첫머리 문단) */
+#w-issues .itabs { display: flex; gap: 6px; flex-wrap: wrap; flex: none; }
+#w-issues .itabs button { padding: 3px 14px; border-radius: 999px; border: 1px solid #cfd8dc; color: var(--muted); font-size: calc(13px * var(--fs)); }
+#w-issues .itabs button[aria-pressed="true"] { background: #2563eb; border-color: #2563eb; color: #fff; font-weight: 700; }
+#w-issues .imeta { font-size: calc(11.5px * var(--fs)); color: var(--muted); }
+#w-issues .iart { border: 1px solid var(--hair); border-radius: 14px; padding: 14px 16px; background: var(--card); }
+#w-issues .ibadge { display: inline-block; padding: 2px 10px; border-radius: 6px; background: #fde8e8; color: #c81e1e; font-weight: 700; font-size: calc(12px * var(--fs)); }
+#w-issues .iart h3 { margin: 8px 0 10px; font-size: calc(19px * var(--fs)); line-height: 1.35; font-weight: 800; color: var(--text); }
+#w-issues .iart p { margin: 0 0 9px; line-height: 1.7; font-size: calc(13.5px * var(--fs)); }
+#w-issues .iart p > b:first-child { color: var(--text); }
+#w-issues .iart blockquote { margin: 0 0 6px; padding: 2px 0 2px 10px; border-left: 3px solid var(--hair); color: #37474f; font-size: calc(13px * var(--fs)); line-height: 1.6; white-space: pre-wrap; }
+#w-issues .iart .ilinks a { margin-right: 10px; font-size: calc(12.5px * var(--fs)); color: var(--title); }
 /* 세로 제목 카드(.vtitle): 제목을 왼쪽에 세워 내용 칸을 넓힌다. 위젯은 vtitle: true 로 켠다 */
 .vtitle { display: grid; grid-template: auto minmax(0, 1fr) / auto minmax(0, 1fr); column-gap: 3px; padding-left: 3px; }
 .vtitle .head { display: contents; }
@@ -580,8 +637,9 @@ textarea { outline: 0; }
   #chatTop .rt { top: calc(12px + env(safe-area-inset-top)); }
   #chatTop .icon { min-width: 36px; height: 36px; font-size: calc(18px * var(--fs)); }
   #chatTop #toBoard { left: 48px; }
-  #stateLine { margin-left: 76px; }
-  #chatFont { top: calc(48px + env(safe-area-inset-top)); right: 8px; }
+  #stateLine { margin-left: 76px; max-width: calc(100% - 124px); }
+  #chatTools { display: flex; margin-top: 8px; }
+  #chatFont { position: static; margin-left: auto; }
   #chatFont .icon { min-width: 30px; height: 20px; font-size: 12px; }
   #chatAddr { display: block; }
   #scroll { padding-top: calc(112px + env(safe-area-inset-top)); padding-left: 12px; padding-right: 12px; }
@@ -632,7 +690,8 @@ textarea { outline: 0; }
             <label class="switch" title="레나 켜기·끄기. 끄면 테디가 모두 맡습니다"><input id="lenaOn" type="checkbox" aria-label="레나 켜기"><i></i></label>
           </div>
           <div class="gauges">
-            <div class="gauge" id="lenaToday"><div><span class="muted small">오늘 호출</span><b id="lenaCalls">–</b></div></div>
+            <div class="gauge" id="lenaToday"><div><span class="muted small">오늘 사용</span><b id="lenaCalls">–</b></div></div>
+            <div class="gauge" id="grokWeek"><div><span class="muted small">그록 주간</span><span class="muted small" id="grokReset"></span><b id="grokPct">–</b></div><div class="bar-mini"><i id="grokBar"></i></div></div>
             <div class="gauge" id="lenaWeek"><div><span class="muted small">빌드 주간</span><span class="muted small" id="lenaReset"></span><b id="lenaPct">–</b></div><div class="bar-mini"><i id="lenaBar"></i></div></div>
           </div>
           <div class="pick" style="margin-bottom:0">
@@ -702,7 +761,7 @@ textarea { outline: 0; }
       </section>
       <section class="card grow" id="mailCard" aria-label="이메일">
         <div class="head"><h2><img class="ttlIcon" src="/img/mail.png" alt="">이메일</h2>
-          <div class="tools"><span class="muted small" id="mailCount"></span><button class="icon refresh" type="button" title="일정·메일 새로고침" aria-label="일정과 메일 새로고침">↻</button><a class="icon" href="https://mail.google.com/" target="_blank" rel="noopener noreferrer" title="Gmail 열기" aria-label="Gmail 열기">↗</a></div></div>
+          <div class="tools"><span class="muted small" id="mailCount"></span><button class="icon refresh" type="button" title="일정·메일 새로고침" aria-label="일정과 메일 새로고침">↻</button><a class="icon" id="gmailTop" href="https://mail.google.com/" target="_blank" rel="noopener noreferrer" title="Gmail 열기" aria-label="Gmail 열기">↗</a></div></div>
         <div class="tabs" id="mailTabs"><button type="button" data-kind="all" aria-pressed="true">전체</button><button type="button" data-kind="reply" aria-pressed="false">답장필요</button><button type="button" data-kind="read" aria-pressed="false">참조</button><button type="button" data-kind="star" aria-pressed="false">중요</button><button type="button" data-kind="other" aria-pressed="false">기타</button></div>
         <div class="list" id="mail"></div>
       </section>
@@ -717,18 +776,19 @@ textarea { outline: 0; }
     <button class="icon left" id="openList" type="button" title="지난 대화" aria-label="지난 대화 목록">☰</button>
     <button class="icon left phone" id="toBoard" type="button" title="일정·뉴스·메일" aria-label="일정, 뉴스, 메일 보기">▦</button>
     <button class="icon rt" id="new" type="button" title="새 대화" aria-label="새 대화">＋</button>
-    <div id="chatFont"><button class="icon" id="chatFontDown" type="button" title="채팅 글자 작게" aria-label="채팅 글자 작게">가−</button><span id="chatFontNow">100%</span><button class="icon" id="chatFontUp" type="button" title="채팅 글자 크게" aria-label="채팅 글자 크게">가+</button></div>
-    <div id="stateLine"><button class="chatDuo" type="button" popovertarget="whoMenu" title="부를 비서 고르기" aria-label="부를 비서 고르기"><img id="faceTeddy" src="/img/teddy-face.png" alt="테디"><img id="faceLena" src="/img/lena-face.png" alt="레나"></button><button id="jobBtn" type="button" title="진행 내용 보기" aria-haspopup="dialog">대기</button><span id="dot"></span><span id="status" role="status">대기 중</span><button id="verifyBtn" type="button" title="직전 답변을 다른 비서가 사실 검증합니다">교차 검증</button></div>
+    <div id="stateLine"><button class="chatDuo" type="button" popovertarget="whoMenu" title="부를 비서 고르기" aria-label="부를 비서 고르기"><img id="faceTeddy" src="/img/teddy-face.png" alt="테디"><img id="faceLena" src="/img/lena-face.png" alt="레나"></button><button id="jobBtn" type="button" title="진행 내용 보기" aria-haspopup="dialog">대기</button><span id="dot"></span><span id="status" role="status">대기 중</span></div>
     <div id="whoMenu" popover><button type="button" data-who="테디">@테디 <span class="muted">메일·일정·파일·부서 일</span></button><button type="button" data-who="레나">@레나 <span class="muted">뉴스·X·웹 검색</span></button></div>
-    <div class="addr" id="chatAddr"></div>
+    <div id="chatTools"><div class="addr" id="chatAddr"></div><div id="chatFont"><button class="icon" id="chatFontDown" type="button" title="채팅 글자 작게" aria-label="채팅 글자 작게">가−</button><span id="chatFontNow">100%</span><button class="icon" id="chatFontUp" type="button" title="채팅 글자 크게" aria-label="채팅 글자 크게">가+</button></div></div>
   </header>
   <div id="drawer">
     <div class="head" style="margin:0"><h2>지난 대화</h2><div class="tools"><button class="icon" id="closeList" type="button" aria-label="닫기">×</button></div></div>
     <nav id="list" aria-label="지난 대화"></nav>
   </div>
   <form id="composer">
+    <div id="workChip" hidden></div>
     <div id="tray" class="files"></div>
     <div id="attachMenu">
+      <button type="button" id="pickWork">🗂️ 작업 폴더 정하기</button>
       <button type="button" id="pickCamera">📷 사진 찍기</button>
       <button type="button" id="pickGallery">🖼️ 앨범에서 고르기</button>
       <button type="button" id="pickFile">📎 파일 고르기</button>
@@ -743,13 +803,26 @@ textarea { outline: 0; }
 </main>
 <div id="drop">여기에 놓으세요</div>
 <div id="dropLine"></div>
+<dialog class="pop" id="zoomPop" aria-label="위젯 크게 보기"></dialog>
+<dialog class="pop" id="diffPop" aria-label="바뀐 내용 보기">
+  <div class="head" style="margin:0"><h2 id="diffTitle"></h2><div class="tools"><button class="icon" id="diffClose" type="button" aria-label="닫기">×</button></div></div>
+  <div id="diffPath" class="small muted"></div>
+  <pre id="diffBody"></pre>
+  <div class="tools"><button type="button" id="diffOpen">파일 열기</button><a id="diffDown" download>내려받기</a></div>
+</dialog>
+<dialog class="pop" id="workPop" aria-label="작업 폴더 고르기">
+  <div class="head" style="margin:0"><h2>작업 폴더</h2><div class="tools"><button class="icon" id="workClose" type="button" aria-label="닫기">×</button></div></div>
+  <div id="workPath"></div>
+  <div id="workList"></div>
+  <button type="button" id="workPick">이 폴더로 정하기</button>
+</dialog>
 <dialog class="pop" id="cardPop" aria-label="답변 카드뉴스">
   <div id="cardBar"><label title="체크하면 산출물의 카드뉴스 폴더에 저장하고, 해제하면 지웁니다"><input id="cardKeep" type="checkbox">결과물에 포함</label><button class="icon" id="cardClose" type="button" aria-label="닫기">×</button></div>
   <iframe id="cardFrame" title="카드뉴스" sandbox="allow-scripts"></iframe>
 </dialog>
-<dialog class="pop" id="reader" aria-label="카드뉴스 읽기">
-  <div class="head" style="margin:0"><h2 id="readerTitle" style="overflow:hidden;text-overflow:ellipsis"></h2><div class="tools"><button class="pill ghost" type="button" id="readerFiles">폴더 파일 보기</button><a class="icon" id="readerNew" target="_blank" rel="noopener" title="새 탭에서 열기" aria-label="새 탭에서 열기">↗</a><button class="icon" type="button" data-shut aria-label="닫기">×</button></div></div>
-  <iframe id="readerFrame" title="카드뉴스" sandbox="allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox"></iframe>
+<dialog class="pop" id="reader" aria-label="파일 보기">
+  <div class="head" style="margin:0"><h2 id="readerTitle" style="overflow:hidden;text-overflow:ellipsis"></h2><div class="tools"><button class="pill ghost" type="button" id="readerFiles">폴더 파일 보기</button><a class="icon" id="readerDown" download title="내려받기" aria-label="내려받기">↓</a><button class="icon" type="button" id="readerFull" title="크게 보기" aria-label="크게 보기">⤢</button><a class="icon" id="readerNew" target="_blank" rel="noopener" title="새 탭에서 열기" aria-label="새 탭에서 열기">↗</a><button class="icon" type="button" data-shut aria-label="닫기">×</button></div></div>
+  <iframe id="readerFrame" title="파일 보기" sandbox="allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox"></iframe>
 </dialog>
 <dialog class="pop" id="editor" aria-label="편집">
   <div class="head" style="margin:0"><h2 id="edTitle"></h2><div class="tools"><button class="icon" type="button" data-shut aria-label="닫기">×</button></div></div>
@@ -811,6 +884,7 @@ textarea { outline: 0; }
 const $ = id => document.getElementById(id);
 const scroll = $('scroll'), thread = $('thread'), input = $('input');
 let shown = null, ready = false, current = null, stream = null, busy = false, uploading = 0, pending = [], drag = 0;
+let workFolder = '', workAt = '', workRO = false;  // 이 대화의 작업 폴더, 폴더 고르기 창에서 보고 있는 곳, 읽기만
 let state = null, topic = '주요', symbol = null, range = '3mo', todos = [], memos = [], cats = {todo: [], memo: []}, symbols = [];
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -870,10 +944,17 @@ function drawAgent() {
   $('model').value = s.model; $('effort').value = s.effort; $('enabled').checked = s.enabled;
   $('lenaModel').value = s.lena.model; $('lenaEffort').value = s.lena.effort; $('lenaOn').checked = s.lena.enabled;
   const lu = state.lenaLimit || {};
-  $('lenaCalls').textContent = state.lenaUsage.calls + '회';
-  $('lenaToday').title = `그록 표시 환산값 $${state.lenaUsage.cost.toFixed(2)} (청구액 아님)`;
-  $('lenaPct').textContent = pct(lu.used); $('lenaBar').style.width = pct(lu.used || 0); $('lenaReset').textContent = resetText(lu.reset, true);
-  $('lenaWeek').title = 'Grok Build(레나·CLI) 사용량입니다. Grok 전체 사용량이 아닙니다.' + (lu.updated ? ` 마지막 확인 ${new Date(lu.updated * 1000).toLocaleString('ko-KR')}${lu.extra ? ' · 추가 결제 사용 있음' : ''}` : ' 아직 읽지 못했습니다');
+  const ls = state.lenaSpend || {today: {}, week: {}}, usd = v => '$' + (v || 0).toFixed(2);
+  $('lenaCalls').textContent = `${ls.today.turns || 0}회 · ${usd(ls.today.cost)}`;
+  $('lenaToday').title = '오늘 그록 대화 회차와 그록이 표시한 환산 비용입니다(청구액 아님).';
+  // 그록은 정수 % 만 줘서 1% 미만 주에는 0% 로 온다. 실제로 썼으면 <1% 와 환산 비용을 함께 보인다
+  $('lenaPct').textContent = !lu.used && ls.week.cost ? '<1%' : pct(lu.used); $('lenaBar').style.width = pct(lu.used || 0); $('lenaReset').textContent = resetText(lu.reset, true);
+  $('lenaWeek').title = `Grok Build(레나·CLI) 사용량입니다. 이번 주 환산 비용 ${usd(ls.week.cost)}.` + (lu.updated ? ` 마지막 확인 ${new Date(lu.updated * 1000).toLocaleString('ko-KR')}${lu.extra ? ' · 추가 결제 사용 있음' : ''}` : ' 아직 읽지 못했습니다');
+  // grok.com 웹 사용량 화면의 한도들. 그중 가장 많이 쓴 것(보통 주간 Grok Bot)을 보이고 나머지는 툴팁에 둔다
+  const gw = state.grokWeb || {}, lims = gw.limits || [], top = lims.reduce((a, b) => (b.used > (a ? a.used : -1) ? b : a), null);
+  $('grokPct').textContent = top ? pct(top.used) : '–'; $('grokBar').style.width = pct(top ? top.used : 0); $('grokReset').textContent = top ? resetText(top.reset, true) : '';
+  $('grokWeek').title = (lims.map(l => `${l.name} ${pct(l.used)}`).join(' · ') || 'grok.com 사용량 화면을 아직 읽지 못했습니다')
+    + (gw.updated ? ` · 마지막 확인 ${new Date(gw.updated * 1000).toLocaleString('ko-KR')}` : '') + (gw.error ? ` · ${gw.error}` : '');
   $('sessionPct').textContent = pct(u.session); $('weekPct').textContent = pct(u.week);
   $('sessionBar').style.width = pct(u.session === undefined ? 0 : u.session); $('weekBar').style.width = pct(u.week === undefined ? 0 : u.week);
   $('sessionReset').textContent = resetText(u.sessionReset); $('weekReset').textContent = resetText(u.weekReset, true);
@@ -897,7 +978,7 @@ function whenText(start, allDay) {
   return `${d.getMonth() + 1}/${d.getDate()}` + hm;
 }
 let eventMode = 'next', mailKind = 'all';
-const eventOpen = new Set();
+const eventOpen = new Set(), mailOpen = new Set();
 function eventRow(e, when, tight) {
   const key = e.start + e.title, range = e.end && !e.allDay ? `${e.start.slice(11, 16)} ~ ${e.end}` : '';
   const more = [range, e.location && '장소: ' + e.location, e.note].filter(Boolean).map(x => `<div>${esc(x)}</div>`).join('') || '<div>추가 내용이 없습니다</div>';
@@ -928,9 +1009,10 @@ function drawFeed() {
   $('mailCount').textContent = unread ? `안 읽음 ${unread}` : '';
   // 중요 메일은 사본을 저장해 최근 목록에서 밀려나도 남는다. 목록에 있으면 최신 상태를 쓴다
   const stars = mailStars().map(s => f.mail.find(m => m.id === s.id) || s), shown = mailKind === 'star' ? stars : f.mail.filter(m => mailKind === 'all' || mailKind === (m.kind || 'read'));
-  $('mail').innerHTML = err + (shown.map(m => `<div class="line mail ${m.kind || 'read'} ${m.unread ? 'unread' : ''}"><input class="mailStar" type="checkbox" data-star="${esc(m.id)}" aria-label="중요 표시" title="중요" ${stars.some(s => s.id === m.id) ? 'checked' : ''}><span class="dot ${m.unread ? '' : 'off'}"></span>
-    <a class="body" style="color:inherit;text-decoration:none" href="https://mail.google.com/mail/u/0/#inbox/${esc(m.id)}" target="_blank" rel="noopener noreferrer"><span class="t" title="${esc([m.from, m.date.slice(5)].filter(Boolean).join(' · '))}">${esc(m.subject || '(제목 없음)')}</span></a>
-    <button class="ask" type="button" data-mail="${esc(m.id)}">비서에게</button>${m.unread ? '' : '<span class="readMark">읽음</span>'}</div>`).join('') || `<div class="none">${loading ? '메일을 읽는 중입니다' : '표시할 메일이 없습니다'}</div>`);
+  // 제목을 누르면 미리 만든 요약을 펼치고, 메일함 버튼은 그 메일을 Gmail 에서 연다
+  $('mail').innerHTML = err + (shown.map(m => { const who = [m.from, m.date.slice(5)].filter(Boolean).join(' · '), open = mailOpen.has(m.id); return `<div class="line mail ${m.kind || 'read'} ${m.unread ? 'unread' : ''}"><input class="mailStar" type="checkbox" data-star="${esc(m.id)}" aria-label="중요 표시" title="중요" ${stars.some(s => s.id === m.id) ? 'checked' : ''}><span class="dot ${m.unread ? '' : 'off'}"></span>
+    <button class="body" type="button" data-open="${esc(m.id)}" aria-expanded="${open}"><span class="t" title="${esc(who)}">${esc(m.subject || '(제목 없음)')}</span></button>
+    <button class="ask" type="button" data-inbox="${esc(m.id)}">메일함</button><button class="ask" type="button" data-mail="${esc(m.id)}">비서에게</button>${m.unread ? '' : '<span class="readMark">읽음</span>'}</div>${open ? `<div class="evMore mailSum"><b>${esc(who)}</b>${esc(m.summary || '요약을 만드는 중입니다. 메일을 다시 읽을 때(30분마다, ↻ 누르면 바로) 채워집니다.')}</div>` : ''}`; }).join('') || `<div class="none">${loading ? '메일을 읽는 중입니다' : '표시할 메일이 없습니다'}</div>`);
 }
 const mailStars = () => state.widgets?.mailStar || [];
 async function loadDash() {
@@ -944,8 +1026,17 @@ async function loadDash() {
   syncWidgets();
   return state;
 }
-let newsLink = '';  // 입력창의 [기사] 제목에 보낼 때 걸 주소
-function hand(text, link = '') { newsLink = link; showBoard(false); input.value = text; resize(); input.focus(); }
+// [입력창에 보이는 글, 보낼 때 바꿀 글]. 긴 주소·메일 ID 는 입력창에 보이지 않고, 보낼 때 제목에 링크로 붙는다
+let inputLinks = [];
+function hand(text, links = []) { inputLinks = links; showBoard(false); input.value = text; resize(); input.focus(); }
+const noBr = t => String(t).replace(/[[\]]/g, '');
+const newsRef = n => [`[기사] ${n.title}`, `[기사] [${noBr(n.title)}](${n.link})`];
+// Gmail 의 16자리 id 는 메일·스레드 id 이고, 웹 주소는 그 10진수를 쓴다(Gmail 도구의 viewUrl 과 같은 꼴, 2026-11-03 확인)
+const mailUrl = id => 'https://mail.google.com/mail/u/0/' + (/^[0-9a-f]{16}$/.test(id) ? `#all/thread-f:${BigInt('0x' + id)}` : `#inbox/${id}`);
+const mailRef = m => { const tail = ` · ${m.from} · ${m.date}`, sub = m.subject || '(제목 없음)';
+  return [`[메일] ${sub}${tail}`, `[메일] [${noBr(sub)}](${mailUrl(m.id)})${tail} (Gmail ID ${m.id})`]; };
+const eventRef = ev => { const tail = ` · ${ev.start}${ev.end ? ' ~ ' + ev.end : ''}${ev.location ? ' · ' + ev.location : ''}`;
+  return [`[일정] ${ev.title}${tail}`, ev.link ? `[일정] [${noBr(ev.title)}](${ev.link})${tail}` : `[일정] ${ev.title}${tail}`]; };
 function showBoard(on) {
   document.body.classList.toggle('board', on);
   if (on) loadMarket();  // 숨겨진 동안에는 그래프 크기를 잴 수 없다
@@ -964,15 +1055,29 @@ $('news').addEventListener('toggle', async e => {
   row.dataset.done = 1;
   const box = row.querySelector('.sum');
   try {
-    const found = await api(`/api/news/summary?title=${encodeURIComponent(n.title)}&source=${encodeURIComponent(n.source)}`);
+    const found = await api(`/api/news/summary?title=${encodeURIComponent(n.orig || n.title)}&source=${encodeURIComponent(n.source)}`);
     box.textContent = found.text || '요약을 만들지 못했습니다';
   } catch (err) { box.textContent = err.message; row.dataset.done = ''; }
 }, true);
+// 하트: 교수님 관심 기사. 서버가 지침/관심사.md 로 남겨 테디와 아침 이슈 작성이 읽는다
+const newsLikes = () => state.widgets?.newsLikes || [];
+const newsLiked = n => newsLikes().some(x => x.link === n.link);
+$('news').addEventListener('click', e => {
+  const b = e.target.closest('[data-heart]');
+  if (!b) return;
+  e.preventDefault();  // summary 안이라 펼침을 막는다
+  const n = newsItems[b.dataset.heart], on = !newsLiked(n);
+  const list = on ? [{title: n.title, source: n.source, link: n.link, topic, at: Math.floor(Date.now() / 1000)}, ...newsLikes()] : newsLikes().filter(x => x.link !== n.link);
+  state.widgets = {...state.widgets, newsLikes: list};
+  wsave('newsLikes', list).catch(err => alert(err.message));
+  b.setAttribute('aria-pressed', on);
+  b.textContent = on ? '♥' : '♡';
+});
 async function loadNews() {
   $('newsTabs').innerHTML = state.topics.map(t => `<span class="tabs" style="margin:0"><button type="button" data-topic="${esc(t)}" aria-pressed="${t === topic}">${esc(t)}</button></span>`).join('');
   try {
     newsItems = await api('/api/news?topic=' + encodeURIComponent(topic));
-    $('news').innerHTML = newsItems.map((n, i) => `<details class="line ev" data-i="${i}"><summary><span class="body"><span class="t">${esc(n.title)}<span class="src"> - ${esc(n.source)}</span></span><time>${new Date(n.when * 1000).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'})}</time></span></summary><div class="evMore"><a class="go" href="${esc(n.link)}" target="_blank" rel="noopener noreferrer"><span class="sum">요약을 읽는 중입니다</span><b>기사로 이동 ↗</b></a><button class="ask" style="opacity:1;margin-top:3px" type="button" data-news="${i}">비서에게</button></div></details>`).join('') || '<div class="none">기사가 없습니다</div>';
+    $('news').innerHTML = newsItems.map((n, i) => `<details class="line ev" data-i="${i}"><summary><button class="heart" type="button" data-heart="${i}" aria-pressed="${newsLiked(n)}" title="관심 있음 — 테디가 기억합니다" aria-label="관심 기사로 표시">${newsLiked(n) ? '♥' : '♡'}</button><span class="body"><span class="t">${esc(n.title)}<span class="src"> - ${esc(n.source)}</span>${n.pick ? '<span class="src" style="color:#e11d48" title="하트에서 배운 검색어로 더 찾은 기사"> · ♥관심</span>' : ''}</span>${n.orig ? `<span class="sub" lang="ja" style="display:block;white-space:normal">원제: ${esc(n.orig)}</span>` : ''}<time>${new Date(n.when * 1000).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'})}</time></span></summary><div class="evMore"><a class="go" href="${esc(n.link)}" target="_blank" rel="noopener noreferrer"><span class="sum">요약을 읽는 중입니다</span><b>기사로 이동 ↗</b></a><button class="ask" style="opacity:1;margin-top:3px" type="button" data-news="${i}">비서에게</button></div></details>`).join('') || '<div class="none">기사가 없습니다</div>';
   } catch (err) { $('news').innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
 }
 
@@ -1007,6 +1112,7 @@ function setFont(pct) {
 const setCols = list => cols.style.setProperty('--cols', list.map(w => `minmax(0, ${w}fr)`).join(' '));
 let chatAdj = 0, chatFont = 100, tabs = [], tabNow = 0;  // 탭마다 배치를 따로 둔다. 다른 탭의 카드는 #stash 에서 계속 갱신된다
 const allCards = () => [...cols.children].flatMap(c => [...c.children]);
+let zoomed = null;  // 크게 보기 중인 카드와 원래 자리 {card, spot}
 function setChatFont(pct) {
   chatFont = clamp(pct, 80, 160);
   document.documentElement.style.setProperty('--chatFont', chatFont / 100);
@@ -1031,6 +1137,7 @@ function snapTab() {
   };
 }
 function saveBoard() {
+  if (zoomed) return;  // 확대한 카드는 판 밖에 있다. 닫을 때 저장한다
   snapTab();
   localStorage.board = JSON.stringify({font: boardFont, fontV: 2, widgets: true, chatAdj, chatFont, tabs, tabNow, locked: boardLocked});
   const plan = tabPlan(), text = JSON.stringify(plan);
@@ -1043,7 +1150,7 @@ function takeTabPlan(plan) {
     return;
   }
   const text = JSON.stringify(plan);
-  if (text === tabSeen || document.querySelector('.btab input, .card.dragging') || document.body.style.userSelect) return;  // 끌거나 이름을 고치는 중에는 미룬다
+  if (zoomed || text === tabSeen || document.querySelector('.btab input, .card.dragging') || document.body.style.userSelect) return;  // 끌거나 이름을 고치는 중에는 미룬다
   snapTab();
   const old = tabs, now = tabs[tabNow].name, known = Object.fromEntries(tabs.flatMap(t => (t.cards || []).flat()).map(c => [c.id, c]));
   allCards().forEach(c => $('stash').append(c));
@@ -1274,10 +1381,33 @@ function setOwn(pct) {
 }
 const addGrip = c => {
   (c.querySelector('.head, .who') || c).insertAdjacentHTML('beforeend',
-    '<div class="grip"><button class="move" type="button" title="끌어서 옮기기" aria-label="항목 옮기기">⠿</button><button class="prop" type="button" title="속성" aria-label="항목 속성">가</button></div>');
+    '<div class="grip"><button class="move" type="button" title="끌어서 옮기기" aria-label="항목 옮기기">⠿</button><button class="prop" type="button" title="속성" aria-label="항목 속성">가</button><button class="zoom" type="button" title="크게 보기" aria-label="크게 보기">⛶</button></div>');
   c.insertAdjacentHTML('beforeend', '<div class="sizer" title="위아래로 끌어 높이 조절">↕</div>');
 };
 document.querySelectorAll('.card').forEach(addGrip);
+// 확대: 같은 카드를 옮기므로 팝업에서 한 일이 그대로 남는다
+function zoomCard(card) {
+  const spot = document.createComment('zoom');
+  card.before(spot);
+  zoomed = {card, spot};
+  card.querySelector('.zoom').title = '닫기';
+  $('zoomPop').append(card);
+  $('zoomPop').showModal();
+  dispatchEvent(new Event('resize'));
+}
+$('zoomPop').addEventListener('close', () => {
+  const {card, spot} = zoomed;
+  spot.replaceWith(card);
+  card.querySelector('.zoom').title = '크게 보기';
+  zoomed = null;
+  saveBoard();
+  dispatchEvent(new Event('resize'));
+});
+$('zoomPop').addEventListener('click', e => { if (e.target === $('zoomPop')) $('zoomPop').close(); });  // 바깥을 누르면 닫는다
+document.addEventListener('click', e => {
+  const z = e.target.closest('.grip .zoom');
+  if (z) zoomed ? $('zoomPop').close() : zoomCard(z.closest('.card'));
+});
 const pickCard = card => {
   document.querySelector('.card.picked')?.classList.remove('picked');
   card?.classList.add('picked');
@@ -1325,7 +1455,7 @@ function driveRow(item, i) {
   const label = `<span class="t">${driveMark(item)} ${esc(item.name)}</span>`;
   const sub = item.card ? `${driveDate(item.when)} · 카드뉴스` : driveView(item.name) || item.dir ? driveDate(item.when) : `${driveDate(item.when)} · 비서에게 눌러 읽기`;
   const body = item.dir ? `<button class="body" type="button" style="text-align:left" data-open="${i}">${label}<span class="sub">${sub}</span></button>`
-    : driveView(item.name) ? `<a class="body" style="color:inherit;text-decoration:none" href="${esc(driveHref(item.name))}" target="_blank" rel="noopener">${label}<span class="sub">${sub}</span></a>`
+    : driveView(item.name) ? `<a class="body" style="color:inherit;text-decoration:none" href="${esc(driveHref(item.name))}" target="_blank" rel="noopener" data-view="${esc(driveHref(item.name))}" data-name="${esc(item.name)}">${label}<span class="sub">${sub}</span></a>`
     : `<button class="body" type="button" style="text-align:left" data-ask="${i}">${label}<span class="sub">${sub}</span></button>`;
   return `<div class="line">${body}<button class="ask" type="button" data-ask="${i}">비서에게</button></div>`;
 }
@@ -1345,6 +1475,11 @@ function openReader(title, url, folder) {
   $('readerTitle').dataset.folder = folder || '';
   $('readerFiles').hidden = !folder;
   $('readerNew').href = url;
+  $('readerDown').hidden = !/^\/(output|uploads)\//.test(url);
+  $('readerDown').href = url + '?download=1';
+  // PDF 는 sandbox 안에서 열리지 않는다. 그림·글·PDF 만 sandbox 를 풀고 HTML 등은 그대로 막는다(서버도 HTML 에 CSP sandbox 를 붙인다)
+  const plain = /\.(pdf|png|jpe?g|gif|webp|bmp|txt|md)$/i.test(decodeURIComponent(url.split('?')[0]));
+  plain ? $('readerFrame').removeAttribute('sandbox') : $('readerFrame').setAttribute('sandbox', 'allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox');
   $('readerFrame').src = url;
   $('reader').showModal();
 }
@@ -1372,10 +1507,17 @@ $('outputs').onclick = e => {
   const hit = e.target.closest('[data-output]');
   if (!hit) return;
   const item = outputItems[hit.dataset.output], url = outputUrl(item.path);
-  if (/\.html?$/i.test(item.name)) openReader(item.name, url);
-  else if (driveView(item.name)) open(url, '_blank', 'noopener');
+  if (driveView(item.name)) openReader(item.name, url);
   else location.href = url + '?download=1';
 };
+$('readerFull').onclick = () => $('reader').classList.toggle('full');
+// 채팅·위젯 어디서든 data-view 가 붙은 파일은 확대 보기 창에서 연다. data-fix 는 그 파일 수정 요청을 입력창에 넣는다
+document.addEventListener('click', e => {
+  const view = e.target.closest('[data-view]'), fix = e.target.closest('[data-fix]'), sug = e.target.closest('[data-sugg]');
+  if (view) { e.preventDefault(); openReader(view.dataset.name, view.dataset.view); }
+  else if (fix) { input.value = `이 파일을 수정해 주세요: ${fix.dataset.fix}\n`; input.focus(); resize(); }
+  else if (sug) { input.value = sug.dataset.sugg; send(); }  // 비서가 제안한 다음 할 일을 누르면 바로 보낸다. 작업 중이면 테디가 합칠지 정한다
+});
 $('readerFiles').onclick = () => { drivePath = driveParts($('readerTitle').dataset.folder).join('/'); $('reader').close(); loadDrive(); };
 $('reader').addEventListener('close', () => { $('readerFrame').src = 'about:blank'; });
 $('cardClose').onclick = () => $('cardPop').close();
@@ -1566,11 +1708,24 @@ function inline(s) {
        .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
        .replace(/~~(.+?)~~/g, '<del>$1</del>')
        .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
+  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => attach(codes[i]) || `<code>${codes[i]}</code>`);
+}
+// 답에 `…산출물\…\파일.확장자` 경로를 적으면 채팅에 첨부 링크로 보인다. 서버가 산출물 밖은 내주지 않는다
+function attach(code) {
+  const box = document.createElement('textarea');
+  box.innerHTML = code;
+  const m = box.value.match(/산출물[\\/]([^*?"<>|\n]+\.\w{1,5})$/);
+  if (!m) return '';
+  const rel = m[1].replace(/\\/g, '/'), name = rel.split('/').pop();
+  const url = esc(outputUrl(rel));  // 결과 파일 카드: 열기(확대 보기)·내려받기·수정 요청
+  return `<span class="fcard" title="${code}">📎 <b>${esc(name)}</b>${driveView(name) ? `<button type="button" data-view="${url}" data-name="${esc(name)}">열기</button>` : ''}`
+    + `<a href="${url}?download=1" download>내려받기</a><button type="button" data-fix="${code}">수정 요청</button></span>`;
 }
 const cells = l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+const SUGG = /^[ \t>*-]*\[\[제안:\s*(.+?)\]\][ \t]*$/gm;  // 비서가 제안한 다음 할 일. 답 끝에 누르면 바로 보내는 단추로 보인다
 function markdown(src) {
-  const lines = src.replace(/\r/g, '').split('\n'), out = [];
+  const sugg = [...src.matchAll(SUGG)].map(m => m[1].trim());
+  const lines = src.replace(SUGG, '').replace(/\r/g, '').split('\n'), out = [];
   for (let i = 0; i < lines.length;) {
     const l = lines[i];
     let m;
@@ -1612,6 +1767,7 @@ function markdown(src) {
       out.push(`<p>${p.map(inline).join('<br>')}</p>`);
     }
   }
+  if (sugg.length) out.push(`<div class="sugg">${sugg.map(t => `<button type="button" data-sugg="${esc(t)}">${esc(t)}</button>`).join('')}</div>`);
   return out.join('');
 }
 
@@ -1650,8 +1806,10 @@ const clipMark = name => name.startsWith('📁') ? '' : '📎 ';  // 폴더는 �
 function fileHtml(files) {
   if (!files?.length) return '';
   return '<div class="files">' + files.map(f => isImage(f.stored)
-    ? `<img src="/uploads/${encodeURIComponent(f.stored)}" alt="${esc(f.name)}">`
-    : `<span class="file">${clipMark(f.name)}${esc(f.name)}</span>`).join('') + '</div>';
+    ? `<img src="/uploads/${encodeURIComponent(f.stored)}" alt="${esc(f.name)}" data-view="/uploads/${encodeURIComponent(f.stored)}" data-name="${esc(f.name)}" style="cursor:zoom-in">`
+    : f.name.startsWith('📁') ? `<span class="file">${esc(f.name)}</span>`
+    : driveView(f.stored) ? `<button type="button" class="file" data-view="/uploads/${encodeURIComponent(f.stored)}" data-name="${esc(f.name)}">📎 ${esc(f.name)}</button>`
+    : `<a class="file" href="/uploads/${encodeURIComponent(f.stored)}?download=1" download style="color:inherit;text-decoration:none">📎 ${esc(f.name)}</a>`).join('') + '</div>';
 }
 const LINK_ATTR = 'target="_blank" rel="noopener noreferrer"';
 const userText = text => esc(text)  // 긴 주소는 숨기고 제목이나 '링크'에 건다
@@ -1666,7 +1824,8 @@ function drawBot(text, who) { return bubble(who === 'lena' ? 'bot lena' : 'bot',
 // 내 질문 옆 작은 표시: 대기 중이면 예정, 마지막 답 뒤에 있고 작업이 돌고 있으면 진행중, 답이 끝나면 지운다
 function tagAsks() {
   const mine = jobs.filter(j => j.conv === current), live = mine.some(j => j.state === 'running');
-  const wait = new Set(mine.filter(j => j.state === 'waiting').flatMap(j => [j.job, j.text]));  // 글은 대기 번호를 주지 않던 옛 서버용
+  // 대기 작업에 합쳐진 질문(asks)도 그 작업과 같은 표시. 진행 중인 작업 뒤라 ⏳ 로 보이던 것을 바로잡는다. 글은 대기 번호를 주지 않던 옛 서버용
+  const wait = new Set(mine.filter(j => j.state === 'waiting').flatMap(j => [j.job, j.text, ...(j.asks || [])]));
   const rows = [...thread.children], last = rows.findLastIndex(r => r.matches('.bot:not(.live)'));
   rows.forEach((r, i) => {
     if (!r.matches('.me')) return;
@@ -1680,7 +1839,8 @@ function tagAsks() {
     let t = r.querySelector('.tag');
     if (!word) return t?.remove();
     if (!t) { t = document.createElement('span'); t.className = 'tag'; r.prepend(t); }
-    t.textContent = word;
+    t.textContent = word === '진행중' ? '⏳' : word;
+    t.title = word; t.setAttribute('aria-label', word);
     t.classList.toggle('on', word === '진행중');
   });
 }
@@ -1800,9 +1960,10 @@ async function openConv(id) {
   thread.innerHTML = '';
   setBusy(false);
   setStatus('대기 중');
-  if (!id) { empty(); drawList(); input.focus(); return; }
+  if (!id) { workFolder = ''; workRO = false; drawWork(); empty(); drawList(); input.focus(); return; }
   const conv = await api('/api/conversation?id=' + id);
   if (turn !== opening) return;
+  workFolder = conv.folder || ''; workRO = !!conv.readonly; drawWork();
   conv.messages.forEach((m, at) => m.role === 'user' ? drawUser(m.text, m.files, m.queued) : m.role === 'note' ? drawNote(m.text) : ansFoot(drawBot(m.text, m.bot), id, at, m));
   drawList();
   toBottom();
@@ -1818,7 +1979,7 @@ async function sync() {
   try { items = await api('/api/conversations'); } catch { return; }
   if (busy) return;
   const top = items[0], mine = items.find(c => c.id === current);
-  const idle = !input.value.trim() && !pending.length;
+  const idle = !input.value.trim() && !pending.length && !(!current && workFolder);  // 새 대화에 폴더를 골라 둔 상태면 다른 대화로 넘기지 않는다
   if (top?.busy && !top.fork && top.id !== current && idle) openConv(top.id);
   else if (mine && (mine.busy || mine.updated !== shown)) openConv(current);
   else if (!current && top && top.updated > bootTime && idle) openConv(top.id);
@@ -1852,6 +2013,10 @@ function follow(id) {
     b.parentNode.classList.toggle('lena', lena);
     b.parentNode.querySelector('.ava').src = `/img/${chatBot}-icon.png?2`;
     setStatus($('status').textContent, true);
+  });
+  es.addEventListener('text', e => {  // 도구 사이의 중간 말(작업 과정)을 지운 답변 전체
+    text = JSON.parse(e.data);
+    if (!queued) { queued = true; requestAnimationFrame(paint); }
   });
   es.addEventListener('delta', e => {
     text += JSON.parse(e.data);
@@ -1899,6 +2064,28 @@ function jobSteps(j, opened) {
   const more = old.length ? `<details data-key="${esc(key)}"${opened.has(key) ? ' open' : ''}><summary class="small muted">이전 단계 ${old.length}개 보기</summary><ol class="jobSteps small">${old.map(s => row(s)).join('')}</ol></details>` : '';
   return `${more}<ol class="jobSteps small">${recent.map((s, i) => row(s, running && i === recent.length - 1)).join('')}</ol>`;
 }
+// 이 작업이 만든·고친 파일은 바로 보이고, 읽기만 한 파일은 접어 둔다. 누르면 고치기 전·후를 본다
+const FILE_KIND = {create: '✨ 새로 만듦', edit: '✏️ 고침', read: '👁 읽음'};
+function jobFiles(j, i, opened) {
+  const all = (j.files || []).map((f, k) => ({...f, k})), changed = all.filter(f => f.kind !== 'read'), read = all.filter(f => f.kind === 'read');
+  const row = f => `<li><button class="link" type="button" data-i="${i}" data-a="file" data-f="${f.k}" title="${esc(f.path)}">${FILE_KIND[f.kind]} · ${esc(f.path.split(/[\\/]/).pop())}</button></li>`;
+  const key = j.conv + j.job + 'read';
+  return (changed.length ? `<div class="small jobFiles">바뀐 파일 ${changed.length}개<ul>${changed.map(row).join('')}</ul></div>` : '')
+    + (read.length ? `<details data-key="${esc(key)}"${opened.has(key) ? ' open' : ''}><summary class="small muted">읽은 파일 ${read.length}개</summary><ul class="small">${read.map(row).join('')}</ul></details>` : '');
+}
+function showDiff(f) {
+  const name = f.path.split(/[\\/]/).pop(), url = `/api/fs/file/${encodeURIComponent(name)}?path=${encodeURIComponent(f.path)}`;  // 끝의 파일 이름으로 열기 방식(PDF·그림은 sandbox 없이)을 정한다
+  $('diffTitle').textContent = `${FILE_KIND[f.kind]} · ${name}`;
+  $('diffPath').textContent = f.path;
+  $('diffBody').innerHTML = f.diff?.length
+    ? f.diff.map(l => `<span class="${l[0] === '+' ? 'add' : l[0] === '-' ? 'del' : l.startsWith('@@') ? 'hunk' : ''}">${esc(l)}</span>`).join('\n') + (f.diff.length >= 200 ? '\n<span class="hunk">… 이후는 생략. 파일을 열어 보세요</span>' : '')
+    : '<span class="hunk">읽기만 한 파일입니다</span>';
+  $('diffOpen').hidden = !driveView(name);
+  $('diffOpen').onclick = () => openReader(name, url);
+  $('diffDown').href = url + '&download=1';
+  $('diffPop').showModal();
+}
+$('diffClose').onclick = () => $('diffPop').close();
 async function drawJobs() {
   try { jobs = await api('/api/jobs'); } catch {
     if (++fails === 2) netNote('서버 연결이 끊겼습니다. 다시 연결되면 작업을 이어갑니다', true);  // 한 번은 휴대폰 깨어날 때도 난다
@@ -1917,14 +2104,21 @@ async function drawJobs() {
   if (!$('jobPop').open) return;
   const openLogs = new Set([...document.querySelectorAll('#jobList details[open]')].map(d => d.dataset.key));
   const waitIn = id => jobs.filter(j => j.conv === id && j.state === 'waiting').length;
+  // 한눈에 보기: 상태 · 짧은 작업 이름(서버가 Haiku 로 만든 이름, 없으면 요청 첫 문장) · 지금 단계 한 줄. 원문·단계·기록은 '자세히' 안에 둔다
+  const short = t => { const s = (t || '').replace(/^@\S+\s*/, '').split(/\n|(?<=[.?!])\s/)[0]; return s.length > 36 ? s.slice(0, 37).replace(/\s+\S*$/, '').replace(/[\s,]+$/, '') + '…' : s; };  // 낱말 중간에서 자르지 않는다
   const rows = jobs.map((j, i) => {
     const key = j.conv + j.job, btn = (a, t, label = t) => `<button class="pill ghost" type="button" data-i="${i}" data-a="${a}" aria-label="${label}">${t}</button>`;
-    const joined = j.parts?.length > 1 ? `<div class="small muted">요청 ${j.parts.length}건을 한 작업으로 처리</div><ol class="small">${j.parts.map(p => `<li>${esc(p.slice(0, 120))}</li>`).join('')}</ol>` : '';
-    const done = j.state === 'done', tools = done ? '' : j.state === 'running'
+    const done = j.state === 'done', running = j.state === 'running', tools = done ? '' : running
       ? btn('stop', j.stopping ? '중지 중' : '중지')
       : (j.order ? btn('first', '먼저') + btn('up', '▲', '위로') : '') + (j.order < waitIn(j.conv) - 1 ? btn('down', '▼', '아래로') : '') + btn('parallel', '동시에') + btn('drop', '취소');
-    const log = j.log?.length ? `<details data-key="${key}"${openLogs.has(key) ? ' open' : ''}><summary class="small">${esc(j.log.at(-1)[1])}</summary><ol class="small">${j.log.map(l => `<li>${new Date(l[0] * 1000).toLocaleTimeString('ko', {hour12: false})} ${esc(l[1])}</li>`).join('')}</ol></details>` : '';
-    return `<div class="jobRow ${j.state}"><div class="jobHead"><b class="small">${done ? `${j.result} ${new Date(j.ended * 1000).toLocaleString('ko', {month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false})}` : j.state === 'running' ? '진행중' : `대기 ${j.order + 1}`}</b><button class="small muted" type="button" data-i="${i}" data-a="open" title="대화 열기">${esc(j.title)}</button>${j.team ? `<span class="small" style="color:var(--green-deep)">${esc(j.team)}</span>` : ''}<span style="flex:1"></span>${tools}${joined || (j.state !== 'waiting' && j.steps?.length) ? '' : `<span class="jobText small">${esc(j.text.slice(0, 200))}</span>`}</div>${joined}${jobSteps(j, openLogs)}${log}</div>`;
+    const mins = running && j.started ? Math.max(1, Math.round(Date.now() / 60000 - j.started / 60)) : 0;
+    const state = done ? `${j.result} ${new Date(j.ended * 1000).toLocaleString('ko', {month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false})}` : running ? `진행중${mins ? ` ${mins}분` : ''}` : `대기 ${j.order + 1}`;
+    const now = running ? j.steps?.at(-1)?.title || j.log?.at(-1)?.[1] || '' : '';
+    const sub = [j.parts?.length > 1 ? `요청 ${j.parts.length}건 합침` : '', now && '▶ ' + now].filter(Boolean).join(' · ');
+    const log = j.log?.length ? `<details data-key="${key}"${openLogs.has(key) ? ' open' : ''}><summary class="small muted">기록 ${j.log.length}줄</summary><ol class="small">${j.log.map(l => `<li>${new Date(l[0] * 1000).toLocaleTimeString('ko', {hour12: false})} ${esc(l[1])}</li>`).join('')}</ol></details>` : '';
+    const asks = j.parts?.length ? j.parts : [j.text];
+    const more = `<details data-key="${key}more"${openLogs.has(key + 'more') ? ' open' : ''}><summary class="small muted">자세히</summary><ol class="small">${asks.map(p => `<li>${esc(p.slice(0, 200))}</li>`).join('')}</ol>${jobSteps(j, openLogs)}${log}</details>`;
+    return `<div class="jobRow ${j.state}"><div class="jobHead"><b class="small">${state}</b><button class="jobName" type="button" data-i="${i}" data-a="open" title="대화 열기 · ${esc(j.title)}">${esc(j.brief || short(j.text) || j.title)}</button>${j.team ? `<span class="small" style="color:var(--green-deep)">${esc(j.team)}</span>` : ''}${tools}</div>${sub ? `<div class="small muted jobNow">${esc(sub)}</div>` : ''}${jobFiles(j, i, openLogs)}${more}</div>`;
   });
   // 최근 = 진행 중·대기 + 12시간 안에 끝난 작업. 그보다 오래된 작업은 접어 둔다
   const cut = Date.now() / 1000 - 12 * 3600, lately = rows.filter((_, i) => jobs[i].state === 'done' && jobs[i].ended >= cut), more = rows.filter((_, i) => jobs[i].state === 'done' && jobs[i].ended < cut);
@@ -1937,6 +2131,7 @@ $('jobList').onclick = async e => {
   const a = e.target.dataset.a, j = jobs[e.target.dataset.i];
   if (!a) return;
   if (a === 'open') { $('jobPop').close(); return openConv(j.conv); }
+  if (a === 'file') return showDiff(j.files[e.target.dataset.f]);
   await api('/api/job', {conv: j.conv, job: j.job, action: a});
   drawJobs();
 };
@@ -1947,16 +2142,17 @@ function resize() {
 }
 async function send(e) {
   e?.preventDefault();
-  const text = input.value.trim().replace(/\[기사\] (.+)/, (all, t) => newsLink ? `[기사] [${t.replace(/[[\]]/g, '')}](${newsLink})` : all);
+  let text = input.value.trim();
+  for (const [plain, linked] of inputLinks) text = text.replace(plain, () => linked);
   if (uploading || (!text && !pending.length)) return;
   const files = pending.map(p => ({name: p.name, stored: p.stored}));
   const wasBusy = busy;
   setBusy(true);
   if (!wasBusy) opening++;
   try {
-    const res = await api('/api/send', {id: current, text, files});
+    const res = await api('/api/send', {id: current, text, files, ...(!current && workFolder ? {folder: workFolder, readonly: workRO} : {})});
     current = res.id;
-    input.value = ''; newsLink = ''; pending = []; drawTray(); resize();
+    input.value = ''; inputLinks = []; pending = []; drawTray(); resize();
     drawJobs();
     drawUser(text, files, res.queued);  // 질문은 대기·합치기와 상관없이 바로 나온다
     toBottom();
@@ -2045,6 +2241,36 @@ input.addEventListener('keydown', e => {
 });
 $('composer').addEventListener('submit', send);
 $('pickFolder').onclick = () => $('folder').click();
+// ── 작업 폴더: 대화마다 하나. 새 대화로 가거나 × 로 지울 때까지 유지된다 ──
+function drawWork() {
+  const c = $('workChip');
+  c.hidden = !workFolder;
+  c.innerHTML = workFolder ? `<span title="${esc(workFolder)}">🗂️ 작업 폴더: ${esc(workFolder.split(/[\\/]/).filter(Boolean).pop() || workFolder)}</span>`
+    + `<button type="button" class="ro" data-ro aria-pressed="${workRO}" title="누르면 바꿉니다. 읽기만이면 테디가 파일을 만들거나 고치지 못합니다">${workRO ? '🔒 읽기만' : '✏️ 고치기 허용'}</button>`
+    + `<button type="button" data-clear aria-label="작업 폴더 해제">×</button>` : '';
+}
+async function setWork(path, ro = workRO) {
+  ro = !!path && ro;  // 읽기만은 작업 폴더에 딸린 설정이다
+  if (current) ({folder: path = '', readonly: ro} = await api('/api/folder', {id: current, folder: path, readonly: ro}));
+  workFolder = path; workRO = ro; drawWork();
+}
+async function browseWork(path) {
+  let r;
+  try { r = await api('/api/fs/list?path=' + encodeURIComponent(path)); } catch (e) { alert('폴더를 열 수 없습니다: ' + e.message); return; }
+  workAt = r.path || '';
+  $('workPath').textContent = workAt || '시작할 곳을 고르세요';
+  $('workPick').disabled = !workAt;
+  const rows = (r.path ? [{name: '↑ 위로', path: r.parent}] : []).concat(r.dirs.map(d => ({name: '📁 ' + d.name, path: d.path})));
+  $('workList').innerHTML = rows.map((d, i) => `<button type="button" data-i="${i}">${esc(d.name)}</button>`).join('') || '<p>하위 폴더가 없습니다</p>';
+  $('workList').onclick = e => { const b = e.target.closest('button'); if (b) browseWork(rows[b.dataset.i].path); };
+}
+$('pickWork').onclick = () => { $('attachMenu').classList.remove('on'); $('workPop').showModal(); browseWork(workFolder); };
+$('workClose').onclick = () => $('workPop').close();
+$('workPick').onclick = async () => { await setWork(workAt); $('workPop').close(); };
+$('workChip').onclick = e => {
+  if (e.target.closest('[data-ro]')) setWork(workFolder, !workRO);
+  else if (e.target.closest('[data-clear]') && confirm('이 대화의 작업 폴더를 해제할까요?')) setWork('');
+};
 $('folder').onchange = e => { addFolder([...e.target.files].map(file => ({file, path: file.webkitRelativePath}))); e.target.value = ''; };
 $('new').onclick = () => { if (confirm('새 대화를 시작할까요?')) openConv(null); };
 $('openList').onclick = () => $('drawer').classList.toggle('on');
@@ -2082,7 +2308,15 @@ $('restart').onclick = async () => {
   alert('서버가 다시 켜지지 않았습니다. PC에서 테디를 실행해 주세요.');
   b.disabled = false; b.classList.remove('spin');
 };
-$('verifyBtn').onclick =() => { if (!current) return; input.value = '@검증'; send(); };
+// 캡처·복사한 그림, 탐색기에서 복사한 파일(종류 무관)을 입력창에 붙여 넣으면 첨부한다. 그림만 있고 엑셀 셀처럼 글도 함께 있으면 글을 붙인다
+$('chat').addEventListener('paste', e => {
+  const all = [...e.clipboardData.files], shots = imageFiles(all), others = all.filter(f => !shots.includes(f));
+  if (!all.length || (!others.length && e.clipboardData.getData('text/plain').trim())) return;
+  e.preventDefault();
+  const d = new Date(), at = [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join('');
+  // 화면 캡처는 이름이 image.png 라 시각을 붙인다. 이름이 있는 파일은 그대로 둔다
+  addFiles(all.map((f, i) => /^image\.\w+$/i.test(f.name) || !f.name ? new File([f], `붙여넣은그림_${at}${all.length > 1 ? '_' + (i + 1) : ''}.${f.type.split('/')[1] || 'png'}`, {type: f.type}) : f));
+});
 document.querySelectorAll('.refresh').forEach(b => b.onclick = async () => {
   await api('/api/refresh', {});
   setTimeout(loadDash, 400);
@@ -2091,11 +2325,22 @@ document.querySelectorAll('.refresh').forEach(b => b.onclick = async () => {
 $('newsTabs').onclick = e => { const t = e.target.dataset.topic; if (t) { topic = t; loadNews(); } };
 $('news').onclick = e => {
   const i = e.target.dataset.news;
-  if (i !== undefined) hand(`@레나 [기사] ${newsItems[i].title}\n`, newsItems[i].link);
+  if (i !== undefined) { const ref = newsRef(newsItems[i]); hand(`@레나 ${ref[0]}\n`, [ref]); }
 };
+function openMail(id) {  // 이 컴퓨터에서는 서버가 크롬으로 연다. 휴대폰 등 다른 기기는 그 기기 브라우저로 연다
+  const url = 'https://mail.google.com/mail/u/0/' + (id ? '#inbox/' + id : '');
+  if (!['127.0.0.1', 'localhost'].includes(location.hostname)) return window.open(url, '_blank', 'noopener');
+  api('/api/open', {id}).catch(() => window.open(url, '_blank', 'noopener'));
+}
+$('gmailTop').onclick = e => { e.preventDefault(); openMail(''); };
 $('mail').onclick = e => {
-  const id = e.target.dataset.mail;
-  if (id !== undefined) { const m = [...state.feed.mail, ...mailStars()].find(x => x.id === id); hand(`Gmail 에서 이 메일을 읽고 요약해줘. 답장이 필요하면 초안만 써줘: ${m.from} / ${m.subject}`); }
+  const {open, inbox, mail: id} = e.target.closest('[data-open],[data-inbox],[data-mail]')?.dataset || {};
+  if (open !== undefined) {
+    mailOpen.has(open) ? mailOpen.delete(open) : mailOpen.add(open);
+    drawFeed();
+    $('mail').querySelector(`[data-open="${CSS.escape(open)}"]`)?.focus();
+  } else if (inbox !== undefined) openMail(inbox);
+  else if (id !== undefined) { const m = [...state.feed.mail, ...mailStars()].find(x => x.id === id); const ref = mailRef(m); hand(`${ref[0]}\n이 메일을 읽고 요약해줘. 답장이 필요하면 초안만 써줘.`, [ref]); }
 };
 $('mail').onchange = e => {
   const id = e.target.dataset.star;
@@ -2206,6 +2451,50 @@ $('cats').addEventListener('close', () => {
   api('/api/dash', {cats});
 });
 
+// 위젯 항목(결과물·드라이브·뉴스·메일·일정·메모·할일·채팅 그림)을 채팅으로 끌어 놓으면 입력창에 그 정보를 덧붙인다.
+// 그림은 첨부로, 파일은 경로로 넘어가 이어서 원하는 요청을 쓰면 된다
+const DRAG_ROW = '#outputs .line, #drive .line, #news .line, #mail .line, #events .ev, #memos .memoRow, #todos .todo, .bubble img[data-view]';
+document.addEventListener('pointerdown', e => { const row = e.target.closest(DRAG_ROW); if (row) row.draggable = true; });
+function dragItem(row) {
+  const pick = sel => row.querySelector(sel) || (row.matches(sel) ? row : null);
+  const win = s => s.replace(/\//g, '\\');
+  if (row.closest('#outputs')) { const o = outputItems[pick('[data-output]').dataset.output]; return {text: `[결과물] 산출물\\${win(o.path)}`}; }
+  if (row.closest('#drive')) {
+    const it = driveItems[pick('[data-ask]').dataset.ask], root = driveRoots[driveRoot];
+    return {text: `[파일] ${[root.path, ...driveParts(it.name)].join('\\')}${it.dir ? ' (폴더)' : ''}`};
+  }
+  if (row.closest('#news')) { const ref = newsRef(newsItems[row.dataset.i]); return {text: ref[0], link: ref}; }
+  if (row.closest('#mail')) {
+    const m = [...state.feed.mail, ...mailStars()].find(x => x.id === pick('[data-mail]').dataset.mail);
+    const ref = mailRef(m);
+    return {text: ref[0], link: ref};
+  }
+  if (row.closest('#events')) {
+    const ev = state.feed.events.find(x => x.start + x.title === row.dataset.key);
+    const ref = eventRef(ev);
+    return {text: ref[0], link: ref};
+  }
+  if (row.closest('#memos')) { const m = memos.find(x => x.id === row.dataset.edit); return {text: m.text.trim() ? `[메모] ${m.text.trim()}` : '', images: m.images}; }
+  if (row.closest('#todos')) { const t = todos.find(x => x.id === row.dataset.id); return {text: `[할일] ${t.text}${t.due ? ` (기한 ${t.due})` : ''}`}; }
+  return {images: [decodeURIComponent(row.dataset.view.split('/').pop())]};  // 채팅 속 그림
+}
+document.addEventListener('dragstart', e => {
+  const row = e.target.closest?.(DRAG_ROW);
+  if (!row) return;
+  try { e.dataTransfer.setData('application/x-teddy', JSON.stringify(dragItem(row))); e.dataTransfer.effectAllowed = 'copy'; } catch { e.preventDefault(); }
+});
+function addToInput(text) {
+  showBoard(false);
+  input.value = (input.value.trim() ? input.value.replace(/\s*$/, '\n') : '') + text + '\n';
+  resize(); input.focus();
+}
+function takeItem({text, images = [], link}) {
+  if (link) inputLinks.push(link);
+  for (const stored of images) if (!pending.some(p => p.stored === stored)) pending.push({name: stored, stored, preview: imageUrl(stored)});
+  if (images.length) drawTray();
+  if (text) addToInput(text);
+  else input.focus();
+}
 addEventListener('dragenter', e => { e.preventDefault(); drag++; $('drop').classList.add('on'); });
 addEventListener('dragleave', () => { if (--drag <= 0) { drag = 0; $('drop').classList.remove('on'); } });
 addEventListener('dragover', e => e.preventDefault());
@@ -2213,8 +2502,17 @@ addEventListener('drop', async e => {
   e.preventDefault();
   drag = 0;
   $('drop').classList.remove('on');
+  const item = e.dataTransfer.getData('application/x-teddy');
+  if (item) return takeItem(JSON.parse(item));
   const files = [...e.dataTransfer.files], entries = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry?.()).filter(Boolean);  // 놓기 정보는 await 뒤에 사라진다
-  if (!entries.some(x => x.isDirectory)) { if (files.length) addFiles(files); return; }
+  if (!entries.some(x => x.isDirectory)) {
+    if (files.length) addFiles(files);
+    else {  // 다른 창에서 끌어온 글·링크는 입력창에 덧붙인다
+      const text = e.dataTransfer.getData('text/plain').trim() || e.dataTransfer.getData('text/uri-list').split('\n').find(l => l && !l.startsWith('#'))?.trim();
+      if (text) addToInput(text);
+    }
+    return;
+  }
   for (const entry of entries) {
     const list = await walkEntry(entry, entry.name);
     await (entry.isDirectory ? addFolder(list) : addFiles(list.map(x => x.file)));

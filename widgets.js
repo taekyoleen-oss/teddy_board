@@ -575,6 +575,39 @@ W.memory = {
 
 // ── 주식 ── 시세 카드와 따로 관심 종목을 둔다
 const STOCK_HOME = [{symbol: '^KS11', name: '코스피'}, {symbol: '^KQ11', name: '코스닥'}, {symbol: '^DJI', name: '다우'}, {symbol: '^GSPC', name: 'S&P 500'}, {symbol: '^IXIC', name: '나스닥'}];
+// ── 이슈 ── 매일 아침 6시 ai-buzz\run.ps1 이 만든 보험 이슈·해외 AI·국내 AI 글 (서버 /api/issues)
+let issueData = null, issueTab = localStorage.issueTab || 'insurance';
+const issueMd = s => esc(s || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');  // 글 안의 **굵게** 만 살린다
+W.issues = {
+  name: '이슈', icon: '📰', about: '보험 이슈·해외 AI·국내 AI 소식. 매일 아침 6시쯤 새로 채웁니다',
+  tick(t) { if (t % 1800 === 0) this.load(); },
+  async load() {
+    try { issueData = await api('/api/issues'); } catch (err) { issueData = {err: err.message}; }
+    this.draw();
+  },
+  draw(el = wbody('issues')) {
+    if (!el) return;
+    wtools('issues', '<button class="icon" type="button" data-re title="새로 고침" aria-label="이슈 새로 고침">↻</button>');
+    document.querySelector('#w-issues .tools').onclick = e => { if ('re' in e.target.dataset) this.load(); };
+    if (!issueData) { el.innerHTML = '<div class="none">이슈를 읽는 중입니다</div>'; this.load(); return; }
+    if (issueData.err) { el.innerHTML = `<div class="alert">${esc(issueData.err)}</div>`; return; }
+    const tab = issueData.find(t => t.key === issueTab) || issueData[0];
+    const art = it => `<article class="iart">${it.badge ? `<span class="ibadge">${esc(it.badge)}</span>` : ''}<h3>${esc(it.title)}</h3>`
+      + (it.sections || []).map(s => `<p>${s.lead ? `<b>${esc(s.lead)}</b> ` : ''}${issueMd(s.text)}</p>`).join('')
+      + (it.quotes || []).map(q => `<blockquote>${esc(q)}</blockquote>`).join('')
+      + (it.meta ? `<div class="imeta">${esc(it.meta)}</div>` : '')
+      + ((it.links || []).length ? `<div class="ilinks">${it.links.map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label || '원문')} ↗</a>`).join('')}</div>` : '')
+      + '</article>';
+    el.innerHTML = `<div class="itabs">${issueData.map(t => `<button type="button" data-tab="${t.key}" aria-pressed="${t === tab}">${t.items?.length ? '• ' : ''}${esc(t.name)}</button>`).join('')}</div>`
+      + `<div class="imeta">${tab.updated ? esc(tab.updated) + ' 기준' : ''}${tab.notice ? ' · ' + esc(tab.notice) : ''}</div>`
+      + (tab.items?.length ? tab.items.map(art).join('') : `<div class="none">${esc(tab.note || '오늘은 조용합니다')}</div>`);
+    el.querySelector('.itabs').onclick = e => {
+      const key = e.target.dataset.tab;
+      if (key) { issueTab = localStorage.issueTab = key; this.draw(el); el.scrollTop = 0; }
+    };
+  },
+};
+
 const sparkLine = list => {
   if (!list || list.length < 2) return '';
   const lo = Math.min(...list), hi = Math.max(...list), span = hi - lo || 1;
