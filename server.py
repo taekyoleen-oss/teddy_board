@@ -643,6 +643,34 @@ def fs_file(path):
     return None if any(part.startswith(".") or part == "AppData" for part in p.parts) else p
 
 
+def folder_snapshot(folder):
+    """작업 폴더 안 파일 {경로: 수정 시각}. 명령(Bash 등)으로 바꾼 파일도 진행 패널에 보이게 작업 전후를 비교한다.
+    ponytail: 5000개까지만 본다. 큰 폴더는 앞부분만 비교된다"""
+    seen = {}
+    for root, dirs, files in os.walk(folder):
+        dirs[:] = [d for d in dirs if not d.startswith((".", "$")) and d not in ("node_modules", "__pycache__")]
+        for name in files:
+            path = os.path.join(root, name)
+            try:
+                seen[path] = os.path.getmtime(path)
+            except OSError:
+                pass
+            if len(seen) >= 5000:
+                return seen
+    return seen
+
+
+def touched_files(turn, before, folder):
+    """작업 동안 생기거나 바뀐 파일 중 도구 기록에 없는 것을 바뀐 줄 없이 더한다."""
+    for path, when in folder_snapshot(folder).items():
+        f = turn.files.get(path)
+        if f and f["kind"] == "edit" and path not in before:  # 복사로 만든 뒤 고친 파일은 새로 만든 것이다
+            f["kind"] = "create"
+        elif when != before.get(path) and not (f and f["kind"] != "read"):
+            turn.files.pop(path, None)
+            turn.files[path] = {"path": path, "kind": "edit" if path in before else "create", "diff": []}
+
+
 def fs_list(path):
     if not path:
         return {"path": "", "parent": None, "dirs": [{"name": str(r), "path": str(r)} for r in FS_ROOTS if r.exists()]}
@@ -1493,6 +1521,7 @@ class Run:
         self.log = []  # 진행 과정 (시각, 상태)
         self.steps = []  # 진행 패널의 단계 정리
         self.files = []  # 진행 패널의 읽은·바뀐 파일
+        self.before = None  # 작업 폴더의 작업 전 모습 (folder_snapshot)
         self.cond = threading.Condition()
 
     def push(self, kind, data):
@@ -1522,7 +1551,8 @@ def run_claude(conv, prompt, run, lead="", quiet=False):
     if folder and os.path.isdir(folder):  # 작업 폴더: 세션 이어가기(--resume)가 시작 위치에 묶여 있어 cwd 는 그대로 두고 폴더만 열어 준다
         prompt = (f"(이 대화의 작업 폴더: {folder}\n파일을 찾고 읽고 만드는 일은 이 폴더를 기준으로 한다. 경로 없이 말한 파일은 이 폴더에서 찾는다. "
                   "폴더에 CLAUDE.md 가 있으면 먼저 읽고 따른다. 원본 파일을 고치기 전에는 같은 폴더에 사본(이름_원본.확장자)을 먼저 남긴다. "
-                  "파일이나 폴더를 지우는 일은 하지 말고, 꼭 필요하면 답에서 교수님께 먼저 여쭌다.)\n\n" + prompt)
+                  "파일이나 폴더를 지우는 일은 하지 말고, 꼭 필요하면 답에서 교수님께 먼저 여쭌다. "
+                  "글 파일을 만들고 고칠 때는 sed·echo 같은 명령 말고 Write·Edit 도구를 쓴다(바뀐 줄이 진행 패널에 남는다).)\n\n" + prompt)
     readonly = conv.get("readonly")
     if readonly:  # 읽기만: 쓰기 도구를 아예 막는다. 명령 실행도 파일을 바꿀 수 있어 함께 막는다
         prompt = "(이 대화는 읽기만 모드다. 파일을 만들거나 고치거나 지우지 않는다. 고칠 곳은 답에 제안만 한다.)\n\n" + prompt
@@ -1544,6 +1574,8 @@ def run_claude(conv, prompt, run, lead="", quiet=False):
                                     stderr=subprocess.STDOUT, encoding="utf-8", errors="replace",
                                     creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
             run.pid = proc.pid
+            if folder and os.path.isdir(folder) and run.before is None:  # 이어받기(lead)로 다시 돌 때는 처음 모습을 그대로 쓴다
+                run.before = folder_snapshot(folder)
             conv.setdefault("active", {}).update(pid=proc.pid, at=time.time())  # 서버가 꺼져도 이 작업을 다시 찾을 수 있게 남긴다
             save_store()
             if run.stopped:  # 앞 턴을 기다리는 사이에 중지를 눌렀다
@@ -1601,6 +1633,9 @@ def finish(conv, run, turn, noise):
     if run.done:  # result 뒤에도 claude 가 종료 전 이벤트를 더 내보낸다. 저장은 한 번만.
         return
     text = turn.text + made_files(run.started, turn.text)
+    if run.before is not None and os.path.isdir(conv.get("folder") or ""):
+        touched_files(turn, run.before, conv["folder"])
+        run.files = list(turn.files.values())
     if turn.error:
         run.push("error", turn.error)
         text = f"{text}\n\n⚠️ {turn.error}".strip()
@@ -2581,6 +2616,14 @@ def check():
     f.feed({"type": "user", "tool_use_result": {"type": "create", "filePath": "C:/x/n.md", "content": "hi", "structuredPatch": []}})
     f.feed({"type": "user", "parent_tool_use_id": "p", "tool_use_result": {"type": "create", "filePath": "C:/x/sub.md", "structuredPatch": []}})
     assert [(x["kind"], x["diff"]) for x in f.files.values()] == [("edit", ["@@ 2줄", "-a", "+b"]), ("create", ["+hi"])]
+    with tempfile.TemporaryDirectory() as tmp:  # 명령으로 바꾼 파일도 작업 전후 비교로 잡는다
+        old, new = os.path.join(tmp, "old.txt"), os.path.join(tmp, "new.txt")
+        Path(old).write_text("a")
+        before = {old: 1.0}  # 작업 전 시각이 달랐다고 본다
+        Path(new).write_text("b")
+        g = Turn()
+        touched_files(g, before, tmp)
+        assert {os.path.basename(k): v["kind"] for k, v in g.files.items()} == {"old.txt": "edit", "new.txt": "create"}
     t.feed({"type": "result", "is_error": True, "result": "막힘", "session_id": "s2"})
     assert t.finished and t.error == "막힘" and t.session == "s2"
     globals()["save_store"] = lambda: None

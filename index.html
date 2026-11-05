@@ -2079,7 +2079,7 @@ function showDiff(f) {
   $('diffPath').textContent = f.path;
   $('diffBody').innerHTML = f.diff?.length
     ? f.diff.map(l => `<span class="${l[0] === '+' ? 'add' : l[0] === '-' ? 'del' : l.startsWith('@@') ? 'hunk' : ''}">${esc(l)}</span>`).join('\n') + (f.diff.length >= 200 ? '\n<span class="hunk">… 이후는 생략. 파일을 열어 보세요</span>' : '')
-    : '<span class="hunk">읽기만 한 파일입니다</span>';
+    : `<span class="hunk">${f.kind === 'read' ? '읽기만 한 파일입니다' : '명령으로 바뀌어 바뀐 줄 기록이 없습니다. 파일을 열어 보세요'}</span>`;
   $('diffOpen').hidden = !driveView(name);
   $('diffOpen').onclick = () => openReader(name, url);
   $('diffDown').href = url + '&download=1';
